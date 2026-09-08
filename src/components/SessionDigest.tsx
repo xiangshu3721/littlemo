@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CaretDown, CaretUp } from "@phosphor-icons/react";
+import { IconCaret } from "@/components/InkIcons";
 import { formatClock } from "@/lib/dates";
 import { weatherMark } from "@/lib/guide";
 import { useStore } from "@/context/store";
@@ -28,26 +28,26 @@ export function SessionDigest({ session }: { session: Session }) {
   return (
     <article className="sheet px-4 py-4">
       <div className="min-w-0">
-        <p className="font-display text-[16px] font-medium leading-6 text-ink">{title}</p>
-        <p className="mt-1 text-[12px] leading-5 text-ink-faint">
+        <p className="font-display text-[16px] font-medium leading-6 tracking-wide text-ink">{title}</p>
+        <p className="mt-1.5 text-[12px] leading-5 tracking-wide text-ink-faint">
           {weather ? `${weatherMark(weather)} ${weather}` : ""}
           {weather && (stress != null || energy != null) ? "  " : ""}
           {stress != null ? `压力 ${stress}/10` : ""}
           {stress != null && energy != null ? "  " : ""}
           {energy != null ? `能量 ${energy}/10` : ""}
         </p>
-        <p className="mt-0.5 text-[12px] text-ink-faint">
+        <p className="mt-0.5 text-[12px] tracking-wide text-ink-faint">
           {formatClock(session.startedAt)}
           {session.endedAt ? ` - ${formatClock(session.endedAt)}` : " · 还在聊"}
         </p>
         {emotions.length ? (
-          <p className="mt-1 text-[13px] text-ink-soft">{emotions.join(" · ")}</p>
+          <p className="mt-1.5 text-[13px] text-ink-soft">{emotions.join(" · ")}</p>
         ) : null}
-        <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-ink-soft">「{preview}」</p>
+        <p className="mt-1 line-clamp-2 text-[13px] leading-6 text-ink-soft">「{preview}」</p>
       </div>
 
       {openChat ? (
-        <p className="mt-3 text-[13px] text-ink-faint">这段还在聊。点「就聊到这」后，会生成深度洞察。</p>
+        <p className="mt-3 text-[13px] leading-6 text-ink-faint">这段还在聊。点「就聊到这」后，会生成深度洞察。</p>
       ) : null}
 
       {thread.length ? (
@@ -55,15 +55,15 @@ export function SessionDigest({ session }: { session: Session }) {
           <button
             type="button"
             onClick={() => setRawOpen((v) => !v)}
-            className="flex items-center gap-1 text-[13px] text-ink-soft"
+            className="flex items-center gap-1 text-[13px] tracking-wide text-ink-soft"
           >
             {rawOpen ? "收起原始记录" : "原始记录"}
-            {rawOpen ? <CaretUp size={14} /> : <CaretDown size={14} />}
+            <IconCaret className={`h-3.5 w-3.5 ${rawOpen ? "rotate-180" : ""}`} />
           </button>
           {rawOpen ? (
-            <div className="mt-2 space-y-2 border-t border-black/5 pt-2">
+            <div className="mt-2 space-y-2 border-t border-line/70 pt-2">
               {thread.slice(0, 40).map((m) => (
-                <p key={m.id} className="text-[13px] leading-5 text-ink-soft">
+                <p key={m.id} className="text-[13px] leading-6 break-words text-ink-soft [overflow-wrap:anywhere]">
                   <span className="text-ink-faint">{m.role === "user" ? "我" : "陪"} · </span>
                   {m.text || "（图片）"}
                 </p>
@@ -76,7 +76,7 @@ export function SessionDigest({ session }: { session: Session }) {
       {session.analysisStatus === "idle" && !openChat ? (
         <button
           type="button"
-          className="mt-3 text-[13px] text-accent"
+          className="mt-3 text-[13px] tracking-wide text-accent"
           onClick={() => retryAnalysis(session.id)}
         >
           生成深度洞察
@@ -84,34 +84,34 @@ export function SessionDigest({ session }: { session: Session }) {
       ) : null}
 
       {session.analysisStatus === "pending" ? (
-        <p className="mt-3 text-[13px] text-ink-soft">正在生成深度洞察…</p>
+        <p className="mt-3 text-[13px] tracking-wide text-ink-soft">正在生成深度洞察…</p>
       ) : null}
 
       {session.analysisStatus === "error" ? (
         <div className="mt-3">
-          <p className="text-[13px] text-ink-soft">{session.analysisError}</p>
-          <button type="button" className="mt-1 text-[13px] text-accent" onClick={() => retryAnalysis(session.id)}>
+          <p className="text-[13px] leading-6 text-ink-soft">{session.analysisError}</p>
+          <button type="button" className="mt-1 text-[13px] tracking-wide text-accent" onClick={() => retryAnalysis(session.id)}>
             再试一次
           </button>
         </div>
       ) : null}
 
       {session.analysisStatus === "done" && a ? (
-        <div className="mt-3 border-t border-black/5 pt-2">
+        <div className="mt-3 border-t border-line/70 pt-2">
           <button
             type="button"
             onClick={() => setInsightOpen((v) => !v)}
-            className="flex items-center gap-1 text-[13px] text-accent"
+            className="flex items-center gap-1 text-[13px] tracking-wide text-accent"
           >
             {insightOpen ? "收起深度洞察" : "深度洞察"}
-            {insightOpen ? <CaretUp size={14} /> : <CaretDown size={14} />}
+            <IconCaret className={`h-3.5 w-3.5 ${insightOpen ? "rotate-180" : ""}`} />
           </button>
           {insightOpen ? (
             <>
               <InsightFlow analysis={a} emotions={emotions} session={session} />
               <button
                 type="button"
-                className="mt-3 text-[12px] text-ink-faint"
+                className="mt-3 text-[12px] tracking-wide text-ink-faint"
                 onClick={() => retryAnalysis(session.id)}
               >
                 重新生成
@@ -121,8 +121,8 @@ export function SessionDigest({ session }: { session: Session }) {
         </div>
       ) : null}
 
-      <div className="mt-3 flex justify-end border-t border-black/5 pt-2">
-        <button type="button" onClick={() => trash(session.id)} className="text-[11px] text-ink-faint">
+      <div className="mt-3 flex justify-end border-t border-line/70 pt-2">
+        <button type="button" onClick={() => trash(session.id)} className="text-[11px] tracking-wide text-ink-faint">
           放到回收站
         </button>
       </div>
@@ -171,8 +171,8 @@ function InsightFlow({
             </p>
           ) : null}
           <section>
-            <h3 className="mb-1 text-[13px] font-medium text-ink">{step.title}</h3>
-            <p className="text-[14px] leading-6 text-ink-soft">
+            <h3 className="mb-1 text-[13px] font-medium tracking-wide text-ink">{step.title}</h3>
+            <p className="text-[14px] leading-7 break-words text-ink-soft [overflow-wrap:anywhere]">
               {asMe(step.body) || "这段里我还没说清。"}
             </p>
           </section>

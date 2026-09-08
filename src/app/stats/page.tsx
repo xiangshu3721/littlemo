@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CaretDown, CaretLeft, CaretRight, CaretUp } from "@phosphor-icons/react";
 import { AppShell } from "@/components/AppShell";
+import { IconCaret } from "@/components/InkIcons";
 import { MoodGlyph } from "@/components/MoodGlyph";
 import { SessionDigest } from "@/components/SessionDigest";
 import { useStore } from "@/context/store";
@@ -71,16 +71,16 @@ export default function StatsPage() {
   return (
     <AppShell title="情绪日记">
       <div className="feed-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-6">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between pt-1">
           <button
             type="button"
             aria-label="上个月"
             onClick={() => setCursor(new Date(year, month - 1, 1))}
             className="grid h-9 w-9 place-items-center text-ink-soft"
           >
-            <CaretLeft size={18} />
+            <IconCaret className="h-[18px] w-[18px] rotate-90" />
           </button>
-          <p className="font-display text-[16px] font-medium tracking-tight text-ink">
+          <p className="font-display text-[17px] font-medium tracking-[0.06em] text-ink">
             {year}年{month + 1}月
           </p>
           <button
@@ -89,20 +89,20 @@ export default function StatsPage() {
             onClick={() => setCursor(new Date(year, month + 1, 1))}
             className="grid h-9 w-9 place-items-center text-ink-soft"
           >
-            <CaretRight size={18} />
+            <IconCaret className="h-[18px] w-[18px] -rotate-90" />
           </button>
         </div>
 
         <button
           type="button"
           onClick={() => setMonthOpen((v) => !v)}
-          className="mb-3 flex w-full items-center justify-center gap-1 text-[13px] text-ink-soft"
+          className="mb-4 flex w-full items-center justify-center gap-1 text-[12px] tracking-[0.14em] text-ink-soft"
         >
           {monthOpen ? "收起月历" : "展开月历"}
-          {monthOpen ? <CaretUp size={14} /> : <CaretDown size={14} />}
+          <IconCaret className={`h-3.5 w-3.5 ${monthOpen ? "rotate-180" : ""}`} />
         </button>
 
-        <div className="grid grid-cols-7 gap-y-2 text-center text-[12px] text-ink-faint">
+        <div className="grid grid-cols-7 gap-y-2 text-center text-[11px] tracking-[0.16em] text-ink-faint">
           {"一二三四五六日".split("").map((d) => (
             <span key={d}>{d}</span>
           ))}
@@ -123,14 +123,14 @@ export default function StatsPage() {
                   if (date.getMonth() !== month) setCursor(new Date(date.getFullYear(), date.getMonth(), 1));
                 }}
                 className={`flex h-12 flex-col items-center justify-center rounded-full ${
-                  selected ? "bg-ink text-paper" : ""
+                  selected ? "bg-seal text-paper" : ""
                 } ${inMonth ? "" : "opacity-35"}`}
               >
                 <span className={`text-[13px] ${selected ? "text-paper" : "text-ink"}`}>{date.getDate()}</span>
                 {mark?.mood ? (
                   <MoodGlyph id={mark.mood} size={12} />
                 ) : mark?.has ? (
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent/70" />
+                  <span className={`mt-1 h-1.5 w-1.5 rounded-full ${selected ? "bg-paper/80" : "bg-accent/70"}`} />
                 ) : (
                   <span className="h-[22px]" />
                 )}
@@ -140,10 +140,11 @@ export default function StatsPage() {
         </div>
 
         {pickedDay ? (
-          <section className="mt-5 space-y-3">
-            <h2 className="font-display text-[16px] font-medium tracking-tight text-ink">{pickedDay}</h2>
+          <section className="mt-6 space-y-3">
+            <p className="chapter-mark">这一日</p>
+            <h2 className="font-display text-[17px] font-medium tracking-wide text-ink">{pickedDay}</h2>
             {daySessions.length === 0 ? (
-              <p className="text-[13px] text-ink-soft">这一天还没有记下的情绪。</p>
+              <p className="pt-2 text-[13px] leading-7 text-ink-soft">这一天还没有记下的情绪。</p>
             ) : (
               daySessions.map((session) => <SessionDigest key={session.id} session={session} />)
             )}

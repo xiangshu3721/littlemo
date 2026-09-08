@@ -12,7 +12,7 @@ export default function HomePage() {
       {ready ? (
         <ChatFeed messages={liveMessages} />
       ) : (
-        <p className="p-8 text-center text-[13px] text-ink-faint">在打开本机记录…</p>
+        <p className="p-10 text-center text-[13px] tracking-wide text-ink-faint">在打开本机记录…</p>
       )}
     </AppShell>
   );

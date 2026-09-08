@@ -1,12 +1,12 @@
 import type { EmotionCount, TrendPoint } from "@/lib/period-stats";
 
-const INK = "#2c241c";
-const SOFT = "#5c5146";
-const FAINT = "#8a7d70";
-const LINE = "#e0d6c8";
-const ACCENT = "#3d6a74";
-const WASH = "#ebe3d6";
-const PAPER = "#fff9f0";
+const INK = "#1f1914";
+const SOFT = "#5a4d41";
+const FAINT = "#8a7b6d";
+const LINE = "#d8ccb8";
+const ACCENT = "#345e67";
+const WASH = "#ebe3d2";
+const PAPER = "#fffcf6";
 
 export function ShareRing({
   positive,

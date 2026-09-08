@@ -1,7 +1,9 @@
+import { wrapUntrusted } from "./api-guard";
 import { MOODS } from "./moods";
 import type { EmotionStage, InteractionKind, ReplyMode } from "./guide";
 import { REPLY_MODES, STAGES, safetyResources, wantsCloseEpisode } from "./guide";
 import { COACH_SYSTEM, coachTurnHint, isShortAck } from "./coach";
+import { LIMITS, clipText } from "./limits";
 import type {
   Analysis,
   ChatLine,
@@ -33,7 +35,7 @@ async function chatJson(
 ) {
   const key = process.env.DEEPSEEK_API_KEY;
   if (!key) {
-    throw new Error("还没有配置 DeepSeek Key。在项目根目录新建 .env.local，写上一行 DEEPSEEK_API_KEY=你的密钥。");
+    throw new Error("NO_KEY");
   }
   const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
   const res = await fetch(`${BASE}/chat/completions`, {
@@ -50,20 +52,28 @@ async function chatJson(
     }),
   });
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`DeepSeek 请求失败（${res.status}）：${err.slice(0, 240)}`);
+    try {
+      await res.text();
+    } catch {
+      /* ignore upstream body */
+    }
+    throw new Error("UPSTREAM");
   }
   const data = (await res.json()) as {
     choices?: { message?: { content?: string } }[];
   };
   const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("DeepSeek 没有返回内容");
-  return extractJson(content);
+  if (!content) throw new Error("BAD_MODEL");
+  try {
+    return extractJson(content);
+  } catch {
+    throw new Error("BAD_MODEL");
+  }
 }
 
 const MOOD_IDS = MOODS.map((m) => m.id).join("、");
 
-function clipMemory(text: string, max = 14000) {
+function clipMemory(text: string, max = LIMITS.memoryChars) {
   if (text.length <= max) return text;
   return "（更早的记录已省略）\n" + text.slice(text.length - max);
 }
@@ -178,7 +188,8 @@ export async function replyTurn(input: {
 }): Promise<GuideTurn> {
   const historyText = input.history.length
     ? input.history
-        .map((line) => `${line.role === "user" ? "我" : "你"}：${line.text}`)
+        .slice(-LIMITS.historyTurns)
+        .map((line) => `${line.role === "user" ? "我" : "你"}：${clipText(line.text, LIMITS.lineChars)}`)
         .join("\n")
     : "（这是这一段的第一句）";
   const ctx = input.context;
@@ -204,10 +215,10 @@ export async function replyTurn(input: {
 ${coachTurnHint({ askedStreak: ctx?.askedStreak || 0, latest: input.latest, highLoad })}
 
 这一段目前的对话：
-${historyText}
+${wrapUntrusted("本段对话", historyText)}
 
 用户刚发${input.hasImage ? "（还附了一张图，你看不到图）" : ""}：
-${input.latest || "（只有图）"}`,
+${wrapUntrusted("本轮原话", input.latest || "（只有图）")}`,
       },
     ],
     0.45,
@@ -278,9 +289,13 @@ emotions 2-4 个。suggestedMood 只能是 ${MOOD_IDS}。pattern 不要写成「
       },
       {
         role: "user",
-        content: lines
-          .map((line) => `${line.time} ${line.role === "user" ? "我" : "听"}：${line.text}`)
-          .join("\n"),
+        content: wrapUntrusted(
+          "本段记录",
+          lines
+            .slice(-LIMITS.analyzeLines)
+            .map((line) => `${line.time} ${line.role === "user" ? "我" : "听"}：${clipText(line.text, LIMITS.lineChars)}`)
+            .join("\n"),
+        ),
       },
     ],
     0.35,
@@ -362,19 +377,23 @@ highFrequency 3-5 个。triggers 3-6 个。unseen 恰好 3 条。loop.steps 5-8 
       },
       {
         role: "user",
-        content: `范围：${rangeName}（${label}）
-本地统计：${digest || "无"}
+        content: wrapUntrusted(
+          "阶段记录",
+          `范围：${rangeName}（${clipText(label, 48)}）
+本地统计：${clipText(digest, LIMITS.digestChars) || "无"}
 记录：
 ${
   entries.length
     ? entries
+        .slice(-LIMITS.periodEntries)
         .map(
           (e) =>
-            `- ${e.day} ${e.weekday || ""} ${e.time} 情绪:${(e.emotions || []).join("/") || "无"} 触动:${e.coreTouch || "无"} 需要:${e.needs || "无"} 内容:${e.text.slice(0, 160)}`,
+            `- ${e.day} ${e.weekday || ""} ${e.time} 情绪:${(e.emotions || []).join("/") || "无"} 触动:${clipText(e.coreTouch, 80) || "无"} 需要:${clipText(e.needs, 80) || "无"} 内容:${clipText(e.text, 160)}`,
         )
         .join("\n")
     : "（没有记录）"
 }`,
+        ),
       },
     ],
     0.4,
