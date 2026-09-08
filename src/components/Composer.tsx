@@ -134,6 +134,8 @@ export function Composer() {
         <textarea
           ref={area}
           rows={1}
+          name="note"
+          id="composer-note"
           maxLength={LIMITS.latestChars}
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, LIMITS.latestChars))}
@@ -159,6 +161,7 @@ export function Composer() {
       <input
         ref={fileRef}
         type="file"
+        name="photo"
         accept="image/jpeg,image/png,image/webp,image/gif"
         className="hidden"
         onChange={(e) => void onFile(e.target.files?.[0])}

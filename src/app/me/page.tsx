@@ -33,6 +33,8 @@ export default function MePage() {
         {error ? <p className="mb-3 text-center text-[12px] text-danger">{error}</p> : null}
         <Field label="昵称">
           <input
+            name="nickname"
+            id="nickname"
             value={draft.nickname}
             maxLength={LIMITS.nickname}
             onChange={(e) => set("nickname", e.target.value)}
@@ -41,6 +43,8 @@ export default function MePage() {
         </Field>
         <Field label="性别">
           <input
+            name="gender"
+            id="gender"
             value={draft.gender}
             maxLength={LIMITS.gender}
             onChange={(e) => set("gender", e.target.value)}
@@ -51,6 +55,8 @@ export default function MePage() {
         <Field label="生日">
           <input
             type="date"
+            name="birthday"
+            id="birthday"
             value={draft.birthday}
             onChange={(e) => set("birthday", e.target.value)}
             className="field"
@@ -58,6 +64,8 @@ export default function MePage() {
         </Field>
         <Field label="地区">
           <input
+            name="region"
+            id="region"
             value={draft.region}
             maxLength={LIMITS.region}
             onChange={(e) => set("region", e.target.value)}
@@ -67,6 +75,8 @@ export default function MePage() {
         </Field>
         <Field label="签名">
           <textarea
+            name="signature"
+            id="signature"
             value={draft.signature}
             maxLength={LIMITS.signature}
             onChange={(e) => set("signature", e.target.value)}

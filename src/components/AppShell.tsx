@@ -212,6 +212,7 @@ export function AvatarField({
       <span className="text-[12px] tracking-wide text-accent">更换头像</span>
       <input
         type="file"
+        name="avatar"
         accept="image/jpeg,image/png,image/webp,image/gif"
         className="hidden"
         onChange={async (e) => {
