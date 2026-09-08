@@ -1,0 +1,105 @@
+.diary {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #e8e8e6;
+}
+
+.diary__feed {
+  flex: 1;
+  height: 0;
+  padding: 16px 16px 28px;
+}
+
+.diary__state {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 28px;
+}
+
+.diary__seal {
+  width: 48px;
+  height: 48px;
+  border: 1.4px solid #999999;
+  border-radius: 50%;
+  opacity: 0.65;
+  margin-bottom: 20px;
+}
+
+.diary__state-title {
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 22px;
+  color: #1a1a1a;
+  letter-spacing: 0.04em;
+}
+
+.diary__state-body {
+  margin-top: 12px;
+  max-width: 220px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #4a4a4a;
+  text-align: center;
+}
+
+.diary__retry {
+  margin-top: 28px;
+  width: 140px;
+  height: 40px;
+  border-radius: 999px;
+  background: #5f6f52;
+  color: #ffffff;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diary__group {
+  margin-bottom: 8px;
+}
+
+.diary__day {
+  display: block;
+  padding: 8px 4px 10px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #999999;
+}
+
+.diary__card {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px;
+  padding: 14px 16px 16px;
+  margin-bottom: 10px;
+}
+
+.diary__time {
+  display: block;
+  font-size: 11px;
+  color: #999999;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.diary__body {
+  display: block;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.diary__more {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #5f6f52;
+}

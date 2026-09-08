@@ -22,7 +22,7 @@ export default defineConfig(async (merge) => {
       API_BASE_URL: apiBase,
     },
     copy: {
-      patterns: [],
+      patterns: [{ from: "src/assets/", to: "assets/" }],
       options: {},
     },
     framework: "react",

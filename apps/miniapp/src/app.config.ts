@@ -1,5 +1,5 @@
 export default defineAppConfig({
-  pages: ["pages/index/index", "pages/mine/index", "pages/login/index"],
+  pages: ["pages/index/index", "pages/diary/index", "pages/mine/index", "pages/login/index"],
   window: {
     backgroundTextStyle: "light",
     navigationBarBackgroundColor: "#f7f7f7",
@@ -16,10 +16,20 @@ export default defineAppConfig({
       {
         pagePath: "pages/index/index",
         text: "有点情绪",
+        iconPath: "assets/tab/chat.png",
+        selectedIconPath: "assets/tab/chat-active.png",
+      },
+      {
+        pagePath: "pages/diary/index",
+        text: "情绪日记",
+        iconPath: "assets/tab/diary.png",
+        selectedIconPath: "assets/tab/diary-active.png",
       },
       {
         pagePath: "pages/mine/index",
         text: "我的",
+        iconPath: "assets/tab/mine.png",
+        selectedIconPath: "assets/tab/mine-active.png",
       },
     ],
   },
