@@ -1,12 +1,13 @@
 import type { EmotionCount, TrendPoint } from "@/lib/period-stats";
 
-const INK = "#1f1914";
-const SOFT = "#5a4d41";
-const FAINT = "#8a7b6d";
-const LINE = "#d8ccb8";
-const ACCENT = "#345e67";
-const WASH = "#ebe3d2";
-const PAPER = "#fffcf6";
+const INK = "var(--ink)";
+const SOFT = "var(--ink-soft)";
+const FAINT = "var(--ink-faint)";
+const LINE = "var(--line)";
+const ACCENT = "var(--accent)";
+const WASH = "var(--wash)";
+const PAPER = "var(--surface)";
+const MIXED = "var(--chart-mixed)";
 
 export function ShareRing({
   positive,
@@ -64,7 +65,7 @@ export function ShareRing({
         {[
           { name: "负向", value: negative, color: INK },
           { name: "正向", value: positive, color: ACCENT },
-          { name: "说不清", value: mixed, color: "#c4b8a8" },
+          { name: "说不清", value: mixed, color: MIXED },
         ].map((row) => (
           <li key={row.name} className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2">
@@ -101,7 +102,7 @@ export function IntensityRail({ value }: { value: number }) {
           />
         ))}
         <span
-          className="absolute top-[8px] h-6 w-6 -translate-x-1/2 rounded-full border-2 border-paper bg-ink shadow-[0_2px_8px_rgba(44,36,28,0.18)]"
+          className="absolute top-[8px] h-6 w-6 -translate-x-1/2 rounded-full border-2 border-surface bg-ink shadow-[var(--shadow)]"
           style={{ left: `${pct}%` }}
         />
       </div>

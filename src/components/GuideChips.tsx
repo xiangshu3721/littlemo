@@ -49,7 +49,7 @@ export function GuideChips({ message, isLatest }: { message: Message; isLatest: 
             key={label}
             type="button"
             onClick={() => void answerChip(message.id, label)}
-            className="rounded-full bg-wash/90 px-3 py-1.5 text-[13px] tracking-wide text-ink shadow-[inset_0_0_0_1px_var(--line)] active:scale-[0.98]"
+            className="rounded-full bg-wash/90 px-3 py-1.5 text-[13px] tracking-wide text-ink shadow-[inset_0_0_0_1px_var(--bubble-border)] active:scale-[0.98]"
           >
             {label}
           </button>

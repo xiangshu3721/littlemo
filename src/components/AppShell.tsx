@@ -11,6 +11,7 @@ import {
   IconSettings,
   IconTrash,
 } from "@/components/InkIcons";
+import { ThemeCycleButton, ThemePicker } from "@/components/ThemeToggle";
 import { useStore } from "@/context/store";
 import { LIMITS, isSafeImageDataUrl } from "@/lib/limits";
 import { blobToDataUrl } from "@/lib/image";
@@ -30,8 +31,8 @@ export function AppShell({
 
   return (
     <div className="flex h-[100dvh] justify-center overflow-hidden bg-desk">
-      <div className="phone relative flex h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden shadow-[0_28px_80px_rgba(31,25,20,0.22)]">
-        <header className="flex shrink-0 items-center gap-3 px-4 pb-3 pt-[max(16px,env(safe-area-inset-top))]">
+      <div className="phone relative flex h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden shadow-[var(--shadow-phone)]">
+        <header className="chrome flex shrink-0 items-center gap-3 px-4 pb-3 pt-[max(16px,env(safe-area-inset-top))]">
           <DrawerButton />
           <div className="min-w-0 flex-1">
             <p className="font-display truncate text-[20px] font-medium tracking-[0.02em] text-ink">{heading}</p>
@@ -39,11 +40,12 @@ export function AppShell({
               {profile.signature || "没事，有我在，陪你一起穿越情绪，看见自己"}
             </p>
           </div>
+          <ThemeCycleButton compact />
         </header>
         <div className="hairline mx-5" />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
-        {composer ? <div className="shrink-0">{composer}</div> : null}
-        <nav className="grid shrink-0 grid-cols-4 pb-[max(10px,env(safe-area-inset-bottom))] pt-1.5">
+        {composer ? <div className="chrome shrink-0">{composer}</div> : null}
+        <nav className="chrome grid shrink-0 grid-cols-4 pb-[max(10px,env(safe-area-inset-bottom))] pt-1.5">
           <div className="hairline col-span-4 mb-1.5" />
           <Tab href="/" label="碎碎念" icon={IconChat} active={pathname === "/"} />
           <Tab href="/stats" label="情绪日记" icon={IconDiary} active={pathname.startsWith("/stats")} />
@@ -92,7 +94,7 @@ function DrawerButton() {
           const el = document.getElementById("side-drawer") as HTMLDialogElement | null;
           el?.showModal();
         }}
-        className="h-11 w-11 overflow-hidden rounded-full bg-wash shadow-[inset_0_0_0_1px_rgba(44,36,28,0.08)]"
+        className="h-11 w-11 overflow-hidden rounded-full bg-wash shadow-[inset_0_0_0_1px_var(--line)]"
         aria-label="菜单"
       >
         {profile.avatarDataUrl ? (
@@ -128,10 +130,10 @@ function Drawer() {
         if (e.target === e.currentTarget) e.currentTarget.close();
       }}
     >
-      <div className="drawer-panel phone flex h-full w-[78%] max-w-[320px] flex-col pt-[max(22px,env(safe-area-inset-top))] shadow-[22px_0_50px_rgba(31,25,20,0.18)]">
+      <div className="drawer-panel phone flex h-full w-[78%] max-w-[320px] flex-col overflow-y-auto pt-[max(22px,env(safe-area-inset-top))] shadow-[var(--shadow-drawer)]">
         <div className="flex items-start justify-between px-5 pb-7">
           <button type="button" onClick={() => go("/me")} className="flex items-center gap-3 text-left">
-            <span className="h-14 w-14 overflow-hidden rounded-full bg-wash shadow-[inset_0_0_0_1px_rgba(44,36,28,0.08)]">
+            <span className="h-14 w-14 overflow-hidden rounded-full bg-wash shadow-[inset_0_0_0_1px_var(--line)]">
               {profile.avatarDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profile.avatarDataUrl} alt="" className="h-full w-full object-cover" />
@@ -160,6 +162,10 @@ function Drawer() {
           <DrawerLink onClick={() => go("/trash")} label="回收站" icon={IconTrash} active={pathname.startsWith("/trash")} />
           <DrawerLink onClick={() => go("/settings")} label="设置" icon={IconSettings} active={pathname.startsWith("/settings")} />
         </nav>
+        <div className="mt-auto px-3 pb-[max(18px,env(safe-area-inset-bottom))] pt-4">
+          <p className="mb-2 px-2 text-[11px] tracking-[0.18em] text-ink-faint">外观</p>
+          <ThemePicker />
+        </div>
       </div>
     </dialog>
   );
@@ -201,7 +207,7 @@ export function AvatarField({
 }) {
   return (
     <label className="inline-flex cursor-pointer flex-col items-center gap-2">
-      <span className="h-[5.5rem] w-[5.5rem] overflow-hidden rounded-full bg-wash shadow-[inset_0_0_0_1px_rgba(44,36,28,0.08)]">
+      <span className="h-[5.5rem] w-[5.5rem] overflow-hidden rounded-full bg-wash shadow-[inset_0_0_0_1px_var(--line)]">
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={value} alt="" className="h-full w-full object-cover" />

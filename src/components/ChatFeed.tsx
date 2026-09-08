@@ -49,7 +49,11 @@ export function ChatFeed({ messages = [] }: { messages: Message[] }) {
     <div ref={scroller} className="feed-scroll min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-4 py-5">
       {grouped.map(([day, items]) => (
         <section key={day} className="space-y-3.5">
-          <h2 className="text-center font-display text-[12px] tracking-[0.18em] text-ink-faint">{formatDayLabel(day)}</h2>
+          <h2 className="flex items-center justify-center gap-3 text-center font-display text-[12px] tracking-[0.18em] text-ink-faint">
+            <span className="h-px w-8 bg-line/80" />
+            {formatDayLabel(day)}
+            <span className="h-px w-8 bg-line/80" />
+          </h2>
           {items.map((message, index) => {
             const next = items[index + 1];
             const archived =

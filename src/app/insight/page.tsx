@@ -189,7 +189,7 @@ export default function InsightPage() {
                   mixed={stats.mixedShare || 0}
                 />
                 {stats.avgIntensity != null ? (
-                  <div className="mt-5 border-t border-black/5 pt-4">
+                  <div className="mt-5 border-t border-line/40 pt-4">
                     <IntensityRail value={stats.avgIntensity} />
                   </div>
                 ) : null}
@@ -258,7 +258,7 @@ export default function InsightPage() {
                     onSelect={(name) => setOpenTrigger((cur) => (cur === name ? null : name))}
                   />
                   {openTrigger ? (
-                    <div className="mt-3 space-y-1 border-t border-black/5 pt-3 text-[13px] leading-6 text-ink-soft">
+                    <div className="mt-3 space-y-1 border-t border-line/40 pt-3 text-[13px] leading-6 text-ink-soft">
                       {triggers
                         .filter((t) => t.name === openTrigger)
                         .map((row) => (
@@ -290,7 +290,7 @@ export default function InsightPage() {
                             ↓
                           </p>
                         ) : null}
-                        <p className="rounded-[16px] bg-white px-3 py-2 text-[14px] leading-6 text-ink-soft">{asMe(step)}</p>
+                        <p className="rounded-[16px] bg-wash px-3 py-2 text-[14px] leading-6 text-ink-soft">{asMe(step)}</p>
                       </div>
                     ))}
                   </div>

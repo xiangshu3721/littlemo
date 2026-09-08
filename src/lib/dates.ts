@@ -19,10 +19,12 @@ export function formatDayLabel(day: string, now = new Date()) {
   const todayStr = toDay(now);
   const y = new Date(now);
   y.setDate(now.getDate() - 1);
-  if (day === todayStr) return "今天";
-  if (day === toDay(y)) return "昨天";
   const [yy, mm, dd] = day.split("-");
-  return `${Number(yy) === now.getFullYear() ? "" : `${yy}年`}${Number(mm)}月${Number(dd)}日`;
+  const datePart = `${Number(yy) === now.getFullYear() ? "" : `${yy}年`}${Number(mm)}月${Number(dd)}日`;
+  const weekday = weekdayName(day);
+  if (day === todayStr) return `今天 ${datePart} ${weekday}`;
+  if (day === toDay(y)) return `昨天 ${datePart} ${weekday}`;
+  return `${datePart} ${weekday}`;
 }
 
 export function startOfWeek(date = new Date()) {
