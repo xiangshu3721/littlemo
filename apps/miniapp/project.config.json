@@ -2,7 +2,7 @@
   "miniprogramRoot": "dist/",
   "projectname": "littlemo",
   "description": "有点情绪",
-  "appid": "touristappid",
+  "appid": "wx6f03736d4996c4e4",
   "setting": {
     "urlCheck": false,
     "es6": false,
