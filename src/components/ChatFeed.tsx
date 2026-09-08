@@ -40,7 +40,7 @@ export function ChatFeed({ messages = [] }: { messages: Message[] }) {
     return (
       <EmptyState
         title="去记下这一刻"
-        body="无论乱、轻，还是说不清，都可以放在这里。不评判、不催促，我只轻轻陪着你，把这一刻安放好。"
+        body="繁华之外的心灵净土，让灵魂慢一点，让烦恼少一些"
       />
     );
   }
