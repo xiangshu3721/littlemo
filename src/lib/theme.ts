@@ -71,7 +71,11 @@ export function readStoredPreference(): ThemePreference {
 }
 
 export function writeStoredPreference(preference: ThemePreference) {
-  localStorage.setItem(THEME_STORAGE_KEY, preference);
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, preference);
+  } catch {
+    /* private mode or blocked storage */
+  }
 }
 
 export function themeColor(resolved: ResolvedTheme) {
