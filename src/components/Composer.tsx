@@ -140,7 +140,7 @@ export function Composer() {
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, LIMITS.latestChars))}
           placeholder="想说就说…"
-          className="max-h-[140px] min-h-11 flex-1 resize-none rounded-[22px] bg-wash px-3.5 py-2.5 text-[15px] leading-5 text-ink outline-none placeholder:text-ink-faint"
+          className="max-h-[140px] min-h-11 flex-1 resize-none rounded-[22px] bg-surface px-3.5 py-2.5 text-[15px] leading-5 text-ink outline-none placeholder:text-ink-faint shadow-[inset_0_0_0_1px_var(--line)]"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();

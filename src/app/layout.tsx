@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -16,12 +17,15 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#F6F0E3",
+  themeColor: "#fafafa",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="zh-CN" className="h-full overflow-hidden">
+    <html lang="zh-CN" className="h-full overflow-hidden" data-theme="light" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
       <body className="h-full overflow-hidden">
         <Providers>{children}</Providers>
       </body>

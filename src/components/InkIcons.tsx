@@ -102,6 +102,51 @@ export function IconCaret({ className }: IconProps) {
   );
 }
 
+export function IconSun({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <circle {...stroke} cx="12" cy="12" r="3.2" />
+      <path {...stroke} d="M12 5.2v1.4M12 17.4v1.4M5.2 12h1.4M17.4 12h1.4M7.2 7.2l1 1M15.8 15.8l1 1M16.8 7.2l-1 1M8.2 15.8l-1 1" />
+    </svg>
+  );
+}
+
+export function IconMoon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path {...stroke} d="M14.6 6.4A6.4 6.4 0 0 0 8.2 16.6 6.6 6.6 0 1 1 14.6 6.4z" />
+    </svg>
+  );
+}
+
+export function IconTime({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <circle {...stroke} cx="12" cy="12" r="7" />
+      <path {...stroke} d="M12 8.4V12l2.6 1.8" />
+    </svg>
+  );
+}
+
+export function IconSprig({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path {...stroke} d="M12 19.2c0-6.4 1.4-10.2 6.2-13.4" />
+      <path {...stroke} d="M12.4 10.2c-2.2-1.8-4.8-2.4-7.4-2.2 2.4 2.2 3.8 4.6 4.2 7.6" />
+      <path {...stroke} d="M12.6 13.6c1.6-1.2 3.6-1.6 5.4-1.4-1.6 1.6-2.6 3.4-2.8 5.4" />
+    </svg>
+  );
+}
+
+export function IconLotus({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path {...stroke} d="M12 18.2c-2.8-2-4.8-4.6-5.6-7.8 2.4.4 4.4 1.6 5.6 3.6 1.2-2 3.2-3.2 5.6-3.6-.8 3.2-2.8 5.8-5.6 7.8z" />
+      <path {...stroke} d="M12 13.2c-1.6-2.6-1.8-5.2-1-7.6 1.4 1.2 2.2 3.2 2.2 5.2 0-2 .8-4 2.2-5.2.8 2.4.6 5-1 7.6" />
+    </svg>
+  );
+}
+
 export function InkSeal({ className }: IconProps) {
   return (
     <svg viewBox="0 0 72 72" className={className} aria-hidden>

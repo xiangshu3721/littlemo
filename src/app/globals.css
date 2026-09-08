@@ -1,35 +1,78 @@
 @import "tailwindcss";
 
 :root {
-  --desk: #9a9186;
-  --paper: #f6f0e3;
-  --wash: #ebe3d2;
-  --bubble: #f1e6cf;
-  --bubble-coach: #fffcf6;
-  --ink: #1f1914;
-  --ink-soft: #5a4d41;
-  --ink-faint: #8a7b6d;
-  --line: #d8ccb8;
-  --accent: #345e67;
-  --accent-soft: #d5e3e1;
-  --accent-ink: #f4efe4;
-  --seal: #7c4034;
-  --danger: #8a3a2a;
-  --shadow: 0 1px 0 rgba(48, 38, 28, 0.04), 0 14px 36px rgba(48, 38, 28, 0.07);
+  color-scheme: light;
+  --desk: #e8e8e6;
+  --paper: #f7f7f7;
+  --surface: #ffffff;
+  --wash: #f0f0ee;
+  --bubble: #f3f3f1;
+  --bubble-coach: #ffffff;
+  --bubble-border: #e5e5e5;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #999999;
+  --line: #e5e5e5;
+  --accent: #5f6f52;
+  --accent-soft: #e4eadc;
+  --accent-ink: #ffffff;
+  --seal: #8a4a42;
+  --danger: #c45c4a;
+  --sheet: #ffffff;
+  --sheet-line: #e8e8e6;
+  --chart-mixed: #c8c4bc;
+  --backdrop: rgb(26 26 26 / 0.28);
+  --shadow: 0 1px 0 rgb(26 26 26 / 0.03), 0 14px 36px rgb(26 26 26 / 0.06);
+  --shadow-phone: 0 28px 80px rgb(26 26 26 / 0.16);
+  --shadow-drawer: 22px 0 50px rgb(26 26 26 / 0.12);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --face-sans:
     "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
   --face-display:
     "Songti SC", "Noto Serif SC", "STSong", "Source Han Serif SC", "PMingLiU", "SimSun", serif;
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.028'/%3E%3C/svg%3E");
+  --wash-glow: radial-gradient(120% 70% at 50% -10%, rgb(255 255 255 / 0.9), transparent 56%);
+  --dusk-glow: radial-gradient(90% 50% at 50% 110%, rgb(95 111 82 / 0.04), transparent 58%);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --desk: #050505;
+  --paper: #0a0a0a;
+  --surface: #0c0c0c;
+  --wash: #161616;
+  --bubble: #121212;
+  --bubble-coach: #101010;
+  --bubble-border: #c4a574;
+  --ink: #f5f1e6;
+  --ink-soft: #d8cbb6;
+  --ink-faint: #c4a574;
+  --line: #c4a574;
+  --accent: #c4a574;
+  --accent-soft: #2a2418;
+  --accent-ink: #0a0a0a;
+  --seal: #c4a574;
+  --danger: #d9897a;
+  --sheet: #121212;
+  --sheet-line: #c4a574;
+  --chart-mixed: #3a342c;
+  --backdrop: rgb(0 0 0 / 0.55);
+  --shadow: 0 1px 0 rgb(196 165 116 / 0.08), 0 16px 40px rgb(0 0 0 / 0.45);
+  --shadow-phone: 0 28px 80px rgb(0 0 0 / 0.55);
+  --shadow-drawer: 22px 0 50px rgb(0 0 0 / 0.5);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+  --wash-glow: radial-gradient(70% 46% at 6% 0%, rgb(196 165 116 / 0.09), transparent 52%);
+  --dusk-glow: radial-gradient(80% 48% at 100% 100%, rgb(196 165 116 / 0.07), transparent 56%);
 }
 
 @theme inline {
   --color-desk: var(--desk);
   --color-paper: var(--paper);
+  --color-surface: var(--surface);
   --color-wash: var(--wash);
   --color-bubble: var(--bubble);
   --color-bubble-coach: var(--bubble-coach);
+  --color-bubble-border: var(--bubble-border);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-ink-faint: var(--ink-faint);
@@ -39,6 +82,7 @@
   --color-accent-ink: var(--accent-ink);
   --color-seal: var(--seal);
   --color-danger: var(--danger);
+  --color-sheet: var(--sheet);
   --font-sans: var(--face-sans);
   --font-display: var(--face-display);
 }
@@ -57,8 +101,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html.theme-animate,
+html.theme-animate body {
+  transition:
+    background-color 160ms var(--ease),
+    color 160ms var(--ease);
+}
+
 ::selection {
-  background: color-mix(in srgb, var(--accent) 22%, white);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
   color: var(--ink);
 }
 
@@ -74,10 +125,11 @@ input {
 
 .phone {
   background-color: var(--paper);
-  background-image:
-    radial-gradient(120% 70% at 50% -10%, rgba(255, 252, 246, 0.72), transparent 56%),
-    radial-gradient(90% 50% at 50% 110%, rgba(48, 38, 28, 0.05), transparent 58%),
-    var(--grain);
+  background-image: var(--wash-glow), var(--dusk-glow), var(--grain);
+}
+
+.chrome {
+  background: var(--surface);
 }
 
 .font-display {
@@ -86,13 +138,14 @@ input {
 
 .sheet {
   border-radius: 20px;
-  background: color-mix(in srgb, white 70%, var(--bubble-coach));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 80%, transparent), var(--shadow);
+  background: var(--sheet);
+  box-shadow: inset 0 0 0 1px var(--sheet-line), var(--shadow);
 }
 
 .hairline {
   background: linear-gradient(90deg, transparent, var(--line) 10%, var(--line) 90%, transparent);
   height: 1px;
+  opacity: 0.7;
 }
 
 .field {
@@ -103,7 +156,7 @@ input {
   font-size: 15px;
   color: var(--ink);
   outline: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .field::placeholder {
@@ -158,7 +211,11 @@ input {
   background:
     radial-gradient(80% 90% at 18% 30%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 58%),
     radial-gradient(70% 80% at 86% 70%, color-mix(in srgb, var(--seal) 10%, transparent), transparent 62%),
-    linear-gradient(180deg, color-mix(in srgb, var(--wash) 70%, white), var(--wash));
+    linear-gradient(180deg, color-mix(in srgb, var(--wash) 55%, var(--surface)), var(--wash));
+}
+
+.bubble-stroke {
+  border: 1px solid var(--bubble-border);
 }
 
 dialog {
@@ -166,7 +223,7 @@ dialog {
 }
 
 dialog::backdrop {
-  background: rgb(31 25 20 / 0.32);
+  background: var(--backdrop);
 }
 
 .drawer-panel {
@@ -215,6 +272,8 @@ dialog[open] .drawer-panel {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html.theme-animate,
+  html.theme-animate body,
   .drawer-panel,
   dialog[open] .drawer-panel,
   .send-pop,
