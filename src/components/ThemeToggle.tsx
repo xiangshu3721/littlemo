@@ -4,32 +4,49 @@ import { IconMoon, IconSun, IconTime } from "@/components/InkIcons";
 import { useTheme } from "@/context/theme";
 import { THEME_OPTIONS, type ThemePreference } from "@/lib/theme";
 
-const CYCLE: ThemePreference[] = ["light", "dark", "system"];
-
 function IconFor({ preference, className }: { preference: ThemePreference; className?: string }) {
   if (preference === "dark") return <IconMoon className={className} />;
   if (preference === "system") return <IconTime className={className} />;
   return <IconSun className={className} />;
 }
 
+/** Header: two explicit buttons — day and night. No clock. */
 export function ThemeCycleButton({ compact = false }: { compact?: boolean }) {
-  const { preference, setPreference } = useTheme();
-  const current = THEME_OPTIONS.find((o) => o.id === preference) || THEME_OPTIONS[2];
-  const next = CYCLE[(CYCLE.indexOf(preference) + 1) % CYCLE.length];
-  const nextOption = THEME_OPTIONS.find((o) => o.id === next)!;
+  const { preference, resolved, setPreference } = useTheme();
+  const active = preference === "system" ? resolved : preference;
+  const size = compact ? "h-10 w-10" : "h-9 w-9";
 
   return (
-    <button
-      type="button"
-      onClick={() => setPreference(next)}
-      className={`grid place-items-center text-ink-soft active:scale-[0.98] ${
-        compact ? "h-11 w-11" : "h-10 w-10"
-      }`}
-      aria-label={`切换外观，当前${current.label}。点按改为${nextOption.label}`}
-      title={`${current.label} · ${current.name}`}
+    <div
+      role="group"
+      aria-label="外观"
+      className="flex items-center gap-0.5 rounded-full border border-line/80 bg-paper/80 p-0.5"
     >
-      <IconFor preference={preference} className="h-[20px] w-[20px]" />
-    </button>
+      <button
+        type="button"
+        onClick={() => setPreference("light")}
+        className={`grid place-items-center rounded-full active:scale-[0.98] ${size} ${
+          active === "light" ? "bg-wash text-ink" : "text-ink-faint hover:text-ink-soft"
+        }`}
+        aria-label="白天 · 干净手账"
+        aria-pressed={active === "light"}
+        title="白天 · 干净手账"
+      >
+        <IconSun className="h-[18px] w-[18px]" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setPreference("dark")}
+        className={`grid place-items-center rounded-full active:scale-[0.98] ${size} ${
+          active === "dark" ? "bg-wash text-ink" : "text-ink-faint hover:text-ink-soft"
+        }`}
+        aria-label="黑夜 · 墨夜金线"
+        aria-pressed={active === "dark"}
+        title="黑夜 · 墨夜金线"
+      >
+        <IconMoon className="h-[18px] w-[18px]" />
+      </button>
+    </div>
   );
 }
 
