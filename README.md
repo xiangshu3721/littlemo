@@ -11,6 +11,8 @@ npm install
 npm run dev
 ```
 
-打开 http://localhost:3000 ，用手机宽度看最准。没有 Key 时仍可记录，分析会提示失败。
+打开 http://localhost:3000 ，用手机宽度看最准。没有 Key 时仍可记录，分析会提示失败。密钥只放在服务器，不要写进前端。
 
-之后 Key 放到腾讯云时，保持 `/api/analyze` 和 `/api/period` 这两个接口即可。
+之后 Key 放到腾讯云时，保持 `/api/chat`、`/api/analyze` 和 `/api/period` 这三个接口即可。
+
+安全说明见 `SECURITY.md`。

@@ -6,6 +6,7 @@ import { isArchiveMark } from "@/lib/guide";
 import { useStore } from "@/context/store";
 import type { Message } from "@/lib/types";
 import { ChatBubble } from "./ChatBubble";
+import { EmptyState } from "./EmptyState";
 import { GuideChips } from "./GuideChips";
 
 export function ChatFeed({ messages = [] }: { messages: Message[] }) {
@@ -37,20 +38,18 @@ export function ChatFeed({ messages = [] }: { messages: Message[] }) {
 
   if (!messages.length) {
     return (
-      <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center overflow-hidden px-8 text-center">
-        <p className="font-display text-[22px] font-medium tracking-tight text-ink">去记下这一刻</p>
-        <p className="mt-3 max-w-[16rem] text-[14px] leading-7 text-ink-soft">
-          想说就说。我陪你往里看一步，不急着分段，也不拿问卷问你。
-        </p>
-      </div>
+      <EmptyState
+        title="去记下这一刻"
+        body="想说就说。我陪你往里看一步，不急着分段，也不拿问卷问你。"
+      />
     );
   }
 
   return (
-    <div ref={scroller} className="feed-scroll min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-4">
+    <div ref={scroller} className="feed-scroll min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-4 py-5">
       {grouped.map(([day, items]) => (
-        <section key={day} className="space-y-3">
-          <h2 className="text-center font-display text-[12px] tracking-[0.14em] text-ink-faint">{formatDayLabel(day)}</h2>
+        <section key={day} className="space-y-3.5">
+          <h2 className="text-center font-display text-[12px] tracking-[0.18em] text-ink-faint">{formatDayLabel(day)}</h2>
           {items.map((message, index) => {
             const next = items[index + 1];
             const archived =
@@ -66,7 +65,9 @@ export function ChatFeed({ messages = [] }: { messages: Message[] }) {
                   </>
                 )}
                 {archived ? (
-                  <p className="text-center text-[11px] tracking-wide text-ink-faint">这段已收进情绪日记，深度洞察可在日记里展开</p>
+                  <p className="pt-1 text-center text-[11px] tracking-[0.12em] text-ink-faint">
+                    这段已收进情绪日记，深度洞察可在日记里展开
+                  </p>
                 ) : null}
               </div>
             );

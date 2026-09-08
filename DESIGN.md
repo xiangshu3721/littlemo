@@ -4,13 +4,13 @@
 
 ## World
 
-Pressed letter-paper phone on a dusk desk. Ink-brown type, clay-teal send, Noto Serif SC for titles, Noto Sans SC for the body. Grain lives in the sheet, not as decoration over the UI.
+Pressed rice-paper phone on a dusk linen desk. Iron-gall ink, a clay-teal send seal, vermilion only for the picked day. Grain lives in the sheet. System Chinese faces first so the page still reads when webfonts never arrive.
 
 ## Surfaces
 
 - `/` companion chat + composer
 - `/stats` week/month calendar of episodes
-- `/insight` long-range patterns and charts
+- `/insight` long-range patterns as notebook chapters
 - `/me` profile form
 - `/settings` local-data notes
 - `/trash` soft-deleted notes
@@ -18,13 +18,15 @@ Pressed letter-paper phone on a dusk desk. Ink-brown type, clay-teal send, Noto 
 
 ## Tokens
 
-- desk `#b9b0a4` paper `#f4efe6` wash `#ebe3d6` bubble `#fff9f0`
-- ink `#2a221b` / `#5a4e43` / `#8d7f72`
-- line `#ddd2c3` accent `#3d6a74`
-- radius 22px sheets, full-pill send
-- type Noto Sans SC 400/500/600; display Noto Serif SC 500/600
-- icons: 1.4px ink line marks, not filled glyph sets
+- desk `#9a9186` paper `#f6f0e3` wash `#ebe3d2`
+- user bubble `#f1e6cf` coach `#fffcf6`
+- ink `#1f1914` / `#5a4d41` / `#8a7b6d`
+- line `#d8ccb8` accent `#345e67` seal `#7c4034`
+- radius 20px sheets, 20px/6px organic bubbles, full-pill send
+- type body: PingFang SC / Hiragino Sans GB / Noto Sans SC / Microsoft YaHei / system-ui
+- type display: Songti SC / Noto Serif SC / STSong / Source Han Serif SC / SimSun
+- icons: 1.4px ink line marks only (no filled glyph sets)
 
 ## Motion
 
-160ms send and drawer only. No page-load choreography.
+160ms send and drawer only (`cubic-bezier(0.22, 1, 0.36, 1)`). No page-load choreography. Honor `prefers-reduced-motion`.

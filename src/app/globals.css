@@ -1,18 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --desk: #b9b0a4;
-  --paper: #f4efe6;
-  --wash: #ebe3d6;
-  --bubble: #fff9f0;
-  --ink: #2a221b;
-  --ink-soft: #5a4e43;
-  --ink-faint: #8d7f72;
-  --line: #ddd2c3;
-  --accent: #3d6a74;
-  --accent-ink: #f7f3ea;
-  --shadow: 0 10px 28px rgba(48, 38, 28, 0.07);
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+  --desk: #9a9186;
+  --paper: #f6f0e3;
+  --wash: #ebe3d2;
+  --bubble: #f1e6cf;
+  --bubble-coach: #fffcf6;
+  --ink: #1f1914;
+  --ink-soft: #5a4d41;
+  --ink-faint: #8a7b6d;
+  --line: #d8ccb8;
+  --accent: #345e67;
+  --accent-soft: #d5e3e1;
+  --accent-ink: #f4efe4;
+  --seal: #7c4034;
+  --danger: #8a3a2a;
+  --shadow: 0 1px 0 rgba(48, 38, 28, 0.04), 0 14px 36px rgba(48, 38, 28, 0.07);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --face-sans:
+    "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --face-display:
+    "Songti SC", "Noto Serif SC", "STSong", "Source Han Serif SC", "PMingLiU", "SimSun", serif;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
 }
 
 @theme inline {
@@ -20,13 +29,18 @@
   --color-paper: var(--paper);
   --color-wash: var(--wash);
   --color-bubble: var(--bubble);
+  --color-bubble-coach: var(--bubble-coach);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-ink-faint: var(--ink-faint);
   --color-line: var(--line);
   --color-accent: var(--accent);
-  --font-sans: var(--font-sans-face), "Noto Sans SC", sans-serif;
-  --font-display: var(--font-display-face), "Noto Serif SC", serif;
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-seal: var(--seal);
+  --color-danger: var(--danger);
+  --font-sans: var(--face-sans);
+  --font-display: var(--face-display);
 }
 
 html,
@@ -38,11 +52,13 @@ body {
 
 body {
   color: var(--ink);
+  font-family: var(--face-sans);
   font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--accent) 28%, white);
+  background: color-mix(in srgb, var(--accent) 22%, white);
   color: var(--ink);
 }
 
@@ -58,7 +74,10 @@ input {
 
 .phone {
   background-color: var(--paper);
-  background-image: var(--grain);
+  background-image:
+    radial-gradient(120% 70% at 50% -10%, rgba(255, 252, 246, 0.72), transparent 56%),
+    radial-gradient(90% 50% at 50% 110%, rgba(48, 38, 28, 0.05), transparent 58%),
+    var(--grain);
 }
 
 .font-display {
@@ -66,25 +85,25 @@ input {
 }
 
 .sheet {
-  border-radius: 22px;
-  background: color-mix(in srgb, white 78%, var(--bubble));
-  box-shadow: var(--shadow);
+  border-radius: 20px;
+  background: color-mix(in srgb, white 70%, var(--bubble-coach));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 80%, transparent), var(--shadow);
 }
 
 .hairline {
-  background: linear-gradient(90deg, transparent, var(--line) 12%, var(--line) 88%, transparent);
+  background: linear-gradient(90deg, transparent, var(--line) 10%, var(--line) 90%, transparent);
   height: 1px;
 }
 
 .field {
   width: 100%;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--wash);
-  padding: 0.75rem 0.95rem;
+  padding: 0.8rem 1rem;
   font-size: 15px;
   color: var(--ink);
   outline: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .field::placeholder {
@@ -96,8 +115,10 @@ input {
   background: var(--accent);
   color: var(--accent-ink);
   font-size: 14px;
-  letter-spacing: 0.02em;
-  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
+  letter-spacing: 0.06em;
+  transition:
+    transform 160ms var(--ease),
+    opacity 160ms ease;
 }
 
 .btn-accent:active:not(:disabled) {
@@ -110,9 +131,9 @@ input {
 
 .pill {
   border-radius: 999px;
-  padding: 0.4rem 0.9rem;
+  padding: 0.38rem 0.95rem;
   font-size: 13px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
 }
 
 .pill-on {
@@ -126,12 +147,54 @@ input {
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
+.chapter-mark {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--ink-faint);
+}
+
+.ink-wash {
+  background:
+    radial-gradient(80% 90% at 18% 30%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 58%),
+    radial-gradient(70% 80% at 86% 70%, color-mix(in srgb, var(--seal) 10%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--wash) 70%, white), var(--wash));
+}
+
 dialog {
   border: 0;
 }
 
 dialog::backdrop {
-  background: rgb(42 34 27 / 0.34);
+  background: rgb(31 25 20 / 0.32);
+}
+
+.drawer-panel {
+  transform: translateX(-12px);
+  opacity: 0.01;
+}
+
+dialog[open] .drawer-panel {
+  animation: drawer-in 160ms var(--ease) forwards;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-16px);
+    opacity: 0.2;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.send-pop:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.send-pop {
+  transition: transform 160ms var(--ease), background-color 160ms ease, color 160ms ease;
 }
 
 .feed-scroll {
@@ -139,14 +202,24 @@ dialog::backdrop {
 }
 
 .feed-scroll::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 
 .feed-scroll::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--ink-faint) 55%, transparent);
+  background: color-mix(in srgb, var(--ink-faint) 45%, transparent);
   border-radius: 99px;
 }
 
 .feed-scroll::-webkit-scrollbar-track {
   background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-panel,
+  dialog[open] .drawer-panel,
+  .send-pop,
+  .btn-accent {
+    animation: none;
+    transition: none;
+  }
 }

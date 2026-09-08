@@ -22,6 +22,7 @@ import {
 } from "@/lib/db";
 import { formatClock, today } from "@/lib/dates";
 import { hoursBetween, isArchiveMark, wantsCloseEpisode } from "@/lib/guide";
+import { LIMITS, clipText, isSafeImageDataUrl } from "@/lib/limits";
 import { resolveEpisodeAction } from "@/lib/router";
 import type {
   Analysis,
@@ -87,6 +88,18 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function sanitizeProfile(input: Profile): Profile {
+  const avatar = isSafeImageDataUrl(input.avatarDataUrl) ? input.avatarDataUrl : undefined;
+  return {
+    nickname: clipText(input.nickname, LIMITS.nickname).trim() || defaultProfile.nickname,
+    gender: clipText(input.gender, LIMITS.gender),
+    birthday: clipText(input.birthday, LIMITS.birthday),
+    region: clipText(input.region, LIMITS.region),
+    signature: clipText(input.signature, LIMITS.signature),
+    avatarDataUrl: avatar,
+  };
+}
+
 function uniq(list: string[]) {
   return [...new Set(list.map((s) => s.trim()).filter(Boolean))];
 }
@@ -142,7 +155,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const raw = localStorage.getItem(PROFILE_KEY);
-        if (raw) setProfile({ ...defaultProfile, ...JSON.parse(raw) });
+        if (raw) setProfile(sanitizeProfile({ ...defaultProfile, ...JSON.parse(raw) }));
       } catch {
         /* keep default */
       }
@@ -250,7 +263,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const res = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lines }),
+          body: JSON.stringify({
+            lines: lines.slice(-LIMITS.analyzeLines).map((l) => ({
+              ...l,
+              text: clipText(l.text, LIMITS.lineChars),
+            })),
+          }),
         });
         const data = (await res.json()) as { analysis?: Analysis; error?: string };
         if (!res.ok) throw new Error(data.error || "分析失败");
@@ -447,8 +465,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            history,
-            latest: userMsg.text,
+            history: history.slice(-LIMITS.historyTurns).map((line) => ({
+              role: line.role,
+              text: clipText(line.text, LIMITS.lineChars),
+            })),
+            latest: clipText(userMsg.text, LIMITS.latestChars),
             hasImage: Boolean(userMsg.image),
             memory: buildMemory(userMsg.sessionId),
             context,
@@ -679,7 +700,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         role: "user",
         createdAt: now.getTime(),
         day,
-        text: input.text.trim(),
+        text: clipText(input.text, LIMITS.latestChars).trim(),
         image: input.image,
       };
       const lastAssist = [...messagesRef.current].reverse().find((m) => m.sessionId === open!.id && m.role === "assistant" && m.interaction && !m.interaction.answered);
@@ -848,7 +869,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     async (sessionId: string) => {
       const cur = sessionsRef.current.find((s) => s.id === sessionId);
       if (!cur) return;
-      await persistSession({ ...cur, deletedAt: Date.now(), endedAt: cur.endedAt || Date.now() });
+      await persistSession({ ...cur, deletedAt: Date.now() });
     },
     [persistSession],
   );
@@ -857,9 +878,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     async (sessionId: string) => {
       const cur = sessionsRef.current.find((s) => s.id === sessionId);
       if (!cur) return;
-      const next = { ...cur };
-      delete next.deletedAt;
-      await persistSession(next);
+      const rest = { ...cur };
+      delete rest.deletedAt;
+      await persistSession(rest);
     },
     [persistSession],
   );
@@ -873,8 +894,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const saveProfile = useCallback((next: Profile) => {
-    setProfile(next);
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
+    const clean = sanitizeProfile(next);
+    setProfile(clean);
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(clean));
   }, []);
 
   const loadReport = useCallback((id: string) => getReport(id), []);

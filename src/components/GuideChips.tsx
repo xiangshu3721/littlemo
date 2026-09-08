@@ -42,14 +42,14 @@ export function GuideChips({ message, isLatest }: { message: Message; isLatest: 
 
   return (
     <div className="max-w-[88%] pl-1">
-      {hint ? <p className="mb-2 text-[12px] text-ink-faint">{hint}</p> : null}
+      {hint ? <p className="mb-2 text-[12px] tracking-wide text-ink-faint">{hint}</p> : null}
       <div className="flex flex-wrap gap-1.5">
         {options.map((label) => (
           <button
             key={label}
             type="button"
             onClick={() => void answerChip(message.id, label)}
-            className="rounded-full bg-wash/80 px-3 py-1.5 text-[13px] text-ink shadow-[inset_0_0_0_1px_var(--line)] active:scale-[0.98]"
+            className="rounded-full bg-wash/90 px-3 py-1.5 text-[13px] tracking-wide text-ink shadow-[inset_0_0_0_1px_var(--line)] active:scale-[0.98]"
           >
             {label}
           </button>

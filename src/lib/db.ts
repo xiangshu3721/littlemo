@@ -112,13 +112,14 @@ export async function deleteSessionForever(id: string) {
   const db = await openDb();
   const tx = db.transaction(["sessions", "messages"], "readwrite");
   const messages = tx.objectStore("messages");
-  const all = await new Promise<Message[]>((resolve, reject) => {
-    const req = messages.getAll();
-    req.onsuccess = () => resolve(req.result as Message[]);
+  const bySession = messages.index("bySession");
+  const rows = await new Promise<Message[]>((resolve, reject) => {
+    const req = bySession.getAll(id);
+    req.onsuccess = () => resolve((req.result as Message[]) || []);
     req.onerror = () => reject(req.error);
   });
-  for (const row of all) {
-    if (row.sessionId === id) messages.delete(row.id);
+  for (const row of rows) {
+    messages.delete(row.id);
   }
   tx.objectStore("sessions").delete(id);
   await txDone(tx);

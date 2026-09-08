@@ -1,4 +1,30 @@
+import { LIMITS } from "./limits";
+
+const ALLOWED_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/heic",
+  "image/heif",
+]);
+
+export function assertImageFile(file: File) {
+  if (file.size > LIMITS.imageInputBytes) {
+    throw new Error("照片太大了，换一张小一点的。");
+  }
+  const type = (file.type || "").toLowerCase();
+  if (type && !type.startsWith("image/")) {
+    throw new Error("只收图片。");
+  }
+  if (type && !ALLOWED_TYPES.has(type) && type !== "image/*") {
+    throw new Error("这种图片格式读不了，试试 jpg 或 png。");
+  }
+}
+
 export function compressImage(file: File, maxSize = 1280): Promise<Blob> {
+  assertImageFile(file);
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -17,8 +43,15 @@ export function compressImage(file: File, maxSize = 1280): Promise<Blob> {
       canvas.toBlob(
         (blob) => {
           URL.revokeObjectURL(url);
-          if (!blob) reject(new Error("图片压缩失败"));
-          else resolve(blob);
+          if (!blob) {
+            reject(new Error("图片压缩失败"));
+            return;
+          }
+          if (blob.size > LIMITS.imageOutputBytes) {
+            reject(new Error("压缩后还是太大，换一张小一点的。"));
+            return;
+          }
+          resolve(blob);
         },
         "image/jpeg",
         0.82,
@@ -33,6 +66,9 @@ export function compressImage(file: File, maxSize = 1280): Promise<Blob> {
 }
 
 export function blobToDataUrl(blob: Blob) {
+  if (blob.size > LIMITS.imageOutputBytes) {
+    return Promise.reject(new Error("图片太大了。"));
+  }
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));

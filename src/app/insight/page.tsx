@@ -25,9 +25,11 @@ function asMe(text: string) {
 
 function Plate() {
   return (
-    <div className="mb-5 overflow-hidden rounded-[22px] bg-wash shadow-[var(--shadow)]">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/insight/insight-panorama.png" alt="" className="h-[148px] w-full object-cover" />
+    <div className="ink-wash mb-6 flex h-[132px] items-end overflow-hidden rounded-[20px] px-5 pb-4">
+      <div>
+        <p className="chapter-mark">看见，而不是计数</p>
+        <p className="mt-1 font-display text-[18px] font-medium tracking-wide text-ink">这一段日子的纸面</p>
+      </div>
     </div>
   );
 }
@@ -125,7 +127,7 @@ export default function InsightPage() {
 
   return (
     <AppShell title="情绪洞察">
-      <div className="feed-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-8">
+      <div className="feed-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-1">
         <div className="mb-4 flex gap-2">
           {(["week", "month", "days90"] as const).map((k) => (
             <button
@@ -156,11 +158,11 @@ export default function InsightPage() {
         )}
 
         {busy ? (
-          <p className="mb-4 text-[13px] text-ink-faint">正在把这段日子看清楚…</p>
+          <p className="mb-4 text-[13px] tracking-wide text-ink-faint">正在把这段日子看清楚…</p>
         ) : error ? (
-          <p className="mb-4 text-[13px] text-[#8A3A2A]">
+          <p className="mb-4 text-[13px] leading-6 text-danger">
             {error}
-            <button type="button" className="ml-2 text-accent" onClick={() => void requestReport(true)}>
+            <button type="button" className="ml-2 tracking-wide text-accent" onClick={() => void requestReport(true)}>
               再试一次
             </button>
           </p>
@@ -169,15 +171,16 @@ export default function InsightPage() {
         )}
 
         {!stats.count ? (
-          <p className="text-[14px] leading-6 text-ink-soft">
+          <p className="pt-6 text-[14px] leading-7 text-ink-soft">
             点「就聊到这」把段落收进日记后，这里会帮我从一堆记录里看见规律：不是数我焦虑了几次，而是弄清我的情绪为什么这样发生。
           </p>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-12">
             <Plate />
 
             <section>
-              <h2 className="font-display text-[18px] font-medium tracking-tight text-ink">我的情绪全景</h2>
+              <p className="chapter-mark">一</p>
+              <h2 className="mt-1 font-display text-[18px] font-medium tracking-wide text-ink">我的情绪全景</h2>
               <div className="sheet mt-4 px-4 py-4">
                 <ShareRing
                   count={stats.count}
@@ -208,7 +211,8 @@ export default function InsightPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-[18px] font-medium tracking-tight text-ink">我最近最常出现</h2>
+              <p className="chapter-mark">二</p>
+              <h2 className="mt-1 font-display text-[18px] font-medium tracking-wide text-ink">我最近最常出现</h2>
               <div className="sheet mt-3 px-4 py-4">
                 <RankBars rows={tags} />
               </div>
@@ -222,7 +226,8 @@ export default function InsightPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-[18px] font-medium tracking-tight text-ink">我的情绪规律</h2>
+              <p className="chapter-mark">三</p>
+              <h2 className="mt-1 font-display text-[18px] font-medium tracking-wide text-ink">我的情绪规律</h2>
               <div className="sheet mt-3 space-y-4 px-4 py-4">
                 <ColumnBars rows={stats.hourBuckets} label="一天里，情绪落在哪" />
                 <ColumnBars rows={stats.weekdayBuckets} label="一星期里，哪天更密" />
@@ -244,7 +249,8 @@ export default function InsightPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-[18px] font-medium tracking-tight text-ink">情绪触发器</h2>
+              <p className="chapter-mark">四</p>
+              <h2 className="mt-1 font-display text-[18px] font-medium tracking-wide text-ink">情绪触发器</h2>
               {triggers.length ? (
                 <div className="sheet mt-3 px-4 py-4">
                   <RankBars
@@ -271,7 +277,8 @@ export default function InsightPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-[18px] font-medium tracking-tight text-ink">我反复出现的模式</h2>
+              <p className="chapter-mark">五</p>
+              <h2 className="mt-1 font-display text-[18px] font-medium tracking-wide text-ink">我反复出现的模式</h2>
               {report?.loop?.steps?.length ? (
                 <div className="mt-3">
                   <p className="text-[15px] font-medium text-ink">{asMe(report.loop.title)}</p>
@@ -296,7 +303,8 @@ export default function InsightPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-[18px] font-medium tracking-tight text-ink">你可能没有注意到</h2>
+              <p className="chapter-mark">六</p>
+              <h2 className="mt-1 font-display text-[18px] font-medium tracking-wide text-ink">你可能没有注意到</h2>
               {unseen.length ? (
                 <ol className="mt-3 space-y-5">
                   {unseen.map((row, index) => (
@@ -312,7 +320,8 @@ export default function InsightPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-[18px] font-medium tracking-tight text-ink">我正在发生什么变化</h2>
+              <p className="chapter-mark">七</p>
+              <h2 className="mt-1 font-display text-[18px] font-medium tracking-wide text-ink">我正在发生什么变化</h2>
               {growth.length ? (
                 <div className="sheet mt-3 px-4 py-4">
                   <DeltaBars rows={growth} />
