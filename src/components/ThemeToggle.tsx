@@ -10,43 +10,28 @@ function IconFor({ preference, className }: { preference: ThemePreference; class
   return <IconSun className={className} />;
 }
 
-/** Header: two explicit buttons — day and night. No clock. */
+/** Header: one icon button — tap to flip day ↔ night. */
 export function ThemeCycleButton({ compact = false }: { compact?: boolean }) {
   const { preference, resolved, setPreference } = useTheme();
   const active = preference === "system" ? resolved : preference;
-  const size = compact ? "h-10 w-10" : "h-9 w-9";
+  const isDark = active === "dark";
 
   return (
-    <div
-      role="group"
-      aria-label="外观"
-      className="flex items-center gap-0.5 rounded-full border border-line/80 bg-paper/80 p-0.5"
+    <button
+      type="button"
+      onClick={() => setPreference(isDark ? "light" : "dark")}
+      className={`grid place-items-center text-ink-soft active:scale-[0.98] ${
+        compact ? "h-11 w-11" : "h-10 w-10"
+      }`}
+      aria-label={isDark ? "切换到白天 · 干净手账" : "切换到黑夜 · 墨夜金线"}
+      title={isDark ? "黑夜 · 点按切白天" : "白天 · 点按切黑夜"}
     >
-      <button
-        type="button"
-        onClick={() => setPreference("light")}
-        className={`grid place-items-center rounded-full active:scale-[0.98] ${size} ${
-          active === "light" ? "bg-wash text-ink" : "text-ink-faint hover:text-ink-soft"
-        }`}
-        aria-label="白天 · 干净手账"
-        aria-pressed={active === "light"}
-        title="白天 · 干净手账"
-      >
-        <IconSun className="h-[18px] w-[18px]" />
-      </button>
-      <button
-        type="button"
-        onClick={() => setPreference("dark")}
-        className={`grid place-items-center rounded-full active:scale-[0.98] ${size} ${
-          active === "dark" ? "bg-wash text-ink" : "text-ink-faint hover:text-ink-soft"
-        }`}
-        aria-label="黑夜 · 墨夜金线"
-        aria-pressed={active === "dark"}
-        title="黑夜 · 墨夜金线"
-      >
-        <IconMoon className="h-[18px] w-[18px]" />
-      </button>
-    </div>
+      {isDark ? (
+        <IconMoon className="h-[20px] w-[20px]" />
+      ) : (
+        <IconSun className="h-[20px] w-[20px]" />
+      )}
+    </button>
   );
 }
 
