@@ -1,0 +1,54 @@
+.login {
+  min-height: 100vh;
+  padding: 88px 36px 48px;
+  background: #e8e8e6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login__mark {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1.4px solid #999999;
+  opacity: 0.7;
+  margin-bottom: 28px;
+}
+
+.login__title {
+  font-family: "Songti SC", "Noto Serif SC", "STSong", "Source Han Serif SC", serif;
+  font-size: 28px;
+  color: #1a1a1a;
+  letter-spacing: 0.08em;
+}
+
+.login__body {
+  margin-top: 16px;
+  max-width: 240px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #4a4a4a;
+  text-align: center;
+}
+
+.login__btn {
+  margin-top: 48px;
+  width: 180px;
+  height: 44px;
+  border-radius: 999px;
+  background: #5f6f52;
+  color: #ffffff;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login__hint {
+  margin-top: 20px;
+  font-size: 11px;
+  color: #999999;
+  letter-spacing: 0.04em;
+}

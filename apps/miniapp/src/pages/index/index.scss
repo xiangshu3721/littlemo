@@ -1,0 +1,134 @@
+.home {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #e8e8e6;
+}
+
+.home__feed {
+  flex: 1;
+  height: 0;
+  padding: 16px 16px 8px;
+}
+
+.home__empty {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 28px;
+}
+
+.home__seal {
+  width: 48px;
+  height: 48px;
+  border: 1.4px solid #999999;
+  border-radius: 50%;
+  opacity: 0.65;
+  margin-bottom: 20px;
+}
+
+.home__empty-title {
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 22px;
+  color: #1a1a1a;
+  letter-spacing: 0.04em;
+}
+
+.home__empty-body {
+  margin-top: 12px;
+  max-width: 220px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #4a4a4a;
+  text-align: center;
+}
+
+.bubble {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.bubble--user {
+  align-items: flex-end;
+}
+
+.bubble--ai {
+  align-items: flex-start;
+}
+
+.bubble__sheet {
+  max-width: 82%;
+  padding: 10px 14px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #1a1a1a;
+  overflow-wrap: anywhere;
+}
+
+.bubble--user .bubble__sheet {
+  background: #f3f3f1;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px 20px 6px 20px;
+}
+
+.bubble--ai .bubble__sheet {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px 20px 20px 6px;
+}
+
+.bubble__sheet--pending {
+  color: #4a4a4a;
+}
+
+.bubble__text {
+  white-space: pre-wrap;
+}
+
+.bubble__time {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #999999;
+  letter-spacing: 0.04em;
+}
+
+.home__composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 14px 18px;
+  background: #f7f7f7;
+  border-top: 1px solid #e5e5e5;
+}
+
+.home__input {
+  flex: 1;
+  min-height: 40px;
+  max-height: 120px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px;
+  font-size: 15px;
+  color: #1a1a1a;
+}
+
+.home__send {
+  width: 64px;
+  height: 40px;
+  border-radius: 999px;
+  background: #5f6f52;
+  color: #ffffff;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home__send[disabled] {
+  opacity: 0.45;
+}

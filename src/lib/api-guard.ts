@@ -68,8 +68,15 @@ const SECRETISH = /api[_-]?key|bearer\s|sk-|authorization|deepseek|env\.|process
 export function publicError(err: unknown, fallback: string) {
   if (err instanceof Error) {
     if (err.message === "NO_KEY") return "还没有配置分析服务。密钥只放在服务器上。";
+    if (err.message === "NO_JWT_SECRET") return "还没有配置登录密钥。";
+    if (err.message === "NO_WECHAT") return "还没有配置微信小程序凭据。本地可设 WECHAT_MOCK=1。";
+    if (err.message === "WECHAT_CODE") return "微信登录码无效或已过期，请再试一次。";
+    if (err.message === "UNSUPPORTED_PROVIDER") return "这个模型还不能用。";
     if (err.message === "UPSTREAM") return "对面这会儿接不上，稍后再试。";
     if (err.message === "BAD_MODEL") return "模型没有按约定回答，再试一次。";
+    if (/Can't reach database server|P1001|P1017|P1000/i.test(err.message)) {
+      return "数据库还没连上。";
+    }
     const msg = err.message.trim();
     if (msg && msg.length <= 48 && !SECRETISH.test(msg) && !/[{[<>]|https?:/i.test(msg)) {
       return msg;
