@@ -1,4 +1,3 @@
-import { prisma } from "@suisuinian/db";
 import { publicError, rateLimit, readJsonBody } from "@/lib/api-guard";
 import { publicUser, signUserToken, upsertWechatUser, wechatSessionFromCode } from "@/lib/auth";
 import { apiJson, preflight, withCors } from "@/lib/cors";

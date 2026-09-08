@@ -74,6 +74,9 @@ export function publicError(err: unknown, fallback: string) {
     if (err.message === "UNSUPPORTED_PROVIDER") return "这个模型还不能用。";
     if (err.message === "UPSTREAM") return "对面这会儿接不上，稍后再试。";
     if (err.message === "BAD_MODEL") return "模型没有按约定回答，再试一次。";
+    if (/Can't reach database server|P1001|P1017|P1000/i.test(err.message)) {
+      return "数据库还没连上。";
+    }
     const msg = err.message.trim();
     if (msg && msg.length <= 48 && !SECRETISH.test(msg) && !/[{[<>]|https?:/i.test(msg)) {
       return msg;

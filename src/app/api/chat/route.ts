@@ -105,62 +105,66 @@ async function companionPost(
 ) {
   const auth = await requireUser(req);
   if (!auth.ok) return auth.response;
-  const content = latestFromMini(data);
-  if (!content) return apiJson(req, { error: "先写一点。" }, 400);
-  const clientId = clipText(data.clientId, 64).trim() || null;
+  try {
+    const content = latestFromMini(data);
+    if (!content) return apiJson(req, { error: "先写一点。" }, 400);
+    const clientId = clipText(data.clientId, 64).trim() || null;
 
-  let note: Note;
-  if (clientId) {
-    const existing = await prisma.note.findUnique({
-      where: { userId_clientId: { userId: auth.user.id, clientId } },
+    let note: Note;
+    if (clientId) {
+      const existing = await prisma.note.findUnique({
+        where: { userId_clientId: { userId: auth.user.id, clientId } },
+      });
+      note = existing
+        ? await prisma.note.update({
+            where: { id: existing.id },
+            data: { content, deletedAt: null },
+          })
+        : await prisma.note.create({
+            data: { userId: auth.user.id, content, clientId },
+          });
+    } else {
+      note = await prisma.note.create({
+        data: { userId: auth.user.id, content },
+      });
+    }
+
+    const userMessage = await prisma.chatMessage.create({
+      data: { userId: auth.user.id, role: "user", content },
     });
-    note = existing
-      ? await prisma.note.update({
-          where: { id: existing.id },
-          data: { content, deletedAt: null },
-        })
-      : await prisma.note.create({
-          data: { userId: auth.user.id, content, clientId },
-        });
-  } else {
-    note = await prisma.note.create({
-      data: { userId: auth.user.id, content },
+
+    const history = await prisma.chatMessage.findMany({
+      where: { userId: auth.user.id },
+      orderBy: { createdAt: "asc" },
     });
+
+    const result = await gatewayChat({
+      provider: "deepseek",
+      temperature: 0.55,
+      messages: [
+        { role: "system", content: COMPANION_SYSTEM },
+        ...toGatewayHistory(history, content),
+      ],
+    });
+
+    const replyText = ensureCrisisCopy(content, result.content);
+    const assistant = await prisma.chatMessage.create({
+      data: {
+        userId: auth.user.id,
+        role: "assistant",
+        content: replyText,
+        model: result.model,
+      },
+    });
+
+    return apiJson(req, {
+      reply: messageJson(assistant),
+      note: noteJson(note),
+      messages: [messageJson(userMessage), messageJson(assistant)],
+    });
+  } catch (err) {
+    return apiJson(req, { error: publicError(err, "没接上") }, 500);
   }
-
-  const userMessage = await prisma.chatMessage.create({
-    data: { userId: auth.user.id, role: "user", content },
-  });
-
-  const history = await prisma.chatMessage.findMany({
-    where: { userId: auth.user.id },
-    orderBy: { createdAt: "asc" },
-  });
-
-  const result = await gatewayChat({
-    provider: "deepseek",
-    temperature: 0.55,
-    messages: [
-      { role: "system", content: COMPANION_SYSTEM },
-      ...toGatewayHistory(history, content),
-    ],
-  });
-
-  const replyText = ensureCrisisCopy(content, result.content);
-  const assistant = await prisma.chatMessage.create({
-    data: {
-      userId: auth.user.id,
-      role: "assistant",
-      content: replyText,
-      model: result.model,
-    },
-  });
-
-  return apiJson(req, {
-    reply: messageJson(assistant),
-    note: noteJson(note),
-    messages: [messageJson(userMessage), messageJson(assistant)],
-  });
 }
 
 async function webCoachPost(data: {
@@ -170,24 +174,29 @@ async function webCoachPost(data: {
   memory?: MemoryPack;
   context?: GuideContext;
 }) {
-  const latest = clipText(data.latest, LIMITS.latestChars).trim();
-  const hasImage = Boolean(data.hasImage);
-  if (!latest && !hasImage) {
-    return NextResponse.json({ error: "先写一点，或附一张图。" }, { status: 400 });
+  try {
+    const latest = clipText(data.latest, LIMITS.latestChars).trim();
+    const hasImage = Boolean(data.hasImage);
+    if (!latest && !hasImage) {
+      return NextResponse.json({ error: "先写一点，或附一张图。" }, { status: 400 });
+    }
+    const turn = await replyTurn({
+      history: clipHistory(data.history),
+      latest,
+      hasImage,
+      memory: clipMemory(data.memory),
+      context: clipGuideContext(data.context),
+    });
+    return NextResponse.json({ turn });
+  } catch (err) {
+    return NextResponse.json({ error: publicError(err, "没接上") }, { status: 500 });
   }
-  const turn = await replyTurn({
-    history: clipHistory(data.history),
-    latest,
-    hasImage,
-    memory: clipMemory(data.memory),
-    context: clipGuideContext(data.context),
-  });
-  return NextResponse.json({ turn });
 }
 
 export async function POST(req: Request) {
   const limited = rateLimit(req, LIMITS.rateChatPerMin);
   if (limited) return readBearer(req) ? withCors(req, limited) : limited;
+  const authed = Boolean(readBearer(req));
   try {
     const parsed = await readJsonBody<{
       history?: ChatLine[];
@@ -200,15 +209,15 @@ export async function POST(req: Request) {
       clientId?: string;
     }>(req, LIMITS.jsonBodyChat);
     if (!parsed.ok) {
-      return readBearer(req) ? withCors(req, parsed.response) : parsed.response;
+      return authed ? withCors(req, parsed.response) : parsed.response;
     }
 
-    if (readBearer(req) || !isWebCoachPayload(parsed.data)) {
+    if (authed || !isWebCoachPayload(parsed.data)) {
       return companionPost(req, parsed.data);
     }
     return webCoachPost(parsed.data);
   } catch (err) {
-    const body = { error: publicError(err, "没接上") };
-    return readBearer(req) ? apiJson(req, body, 500) : NextResponse.json(body, { status: 500 });
+    const res = NextResponse.json({ error: publicError(err, "没接上") }, { status: 500 });
+    return authed ? withCors(req, res) : res;
   }
 }
