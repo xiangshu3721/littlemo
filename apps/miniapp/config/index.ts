@@ -6,7 +6,7 @@ const apiBase = JSON.stringify(process.env.API_BASE_URL || "http://127.0.0.1:300
 
 export default defineConfig(async (merge) => {
   const baseConfig = {
-    projectName: "suisuinian-miniapp",
+    projectName: "littlemo-miniapp",
     date: "2026-9-8",
     designWidth: 375,
     deviceRatio: {

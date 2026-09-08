@@ -1,6 +1,6 @@
-# @suisuinian/db
+# @littlemo/db
 
-PostgreSQL + Prisma for 碎碎念 cloud API (WeChat mini-program V1).
+PostgreSQL + Prisma for 有点情绪 cloud API (WeChat mini-program V1).
 
 ## Models
 

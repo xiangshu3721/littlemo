@@ -16,7 +16,7 @@ People who want to dump feelings in the moment, usually on a phone, without turn
 
 ## Product Purpose
 
-碎碎念 is an AI emotion coach you can open anytime. You talk. It stays with one feeling until you decide it is finished. Success is: you feel accompanied, you see yourself more clearly, and later you can look back at both the raw moment and a folded insight.
+有点情绪 is an AI emotion coach you can open anytime. You talk. It stays with one feeling until you decide it is finished. Success is: you feel accompanied, you see yourself more clearly, and later you can look back at both the raw moment and a folded insight.
 
 ## Positioning
 
@@ -47,7 +47,7 @@ Mobile-first web, used in short bursts. Data stays on this device (IndexedDB). A
 
 ## Brand Commitments
 
-Name: 碎碎念. Binding UI: the two provided interaction drafts (WeChat-like thread, left drawer, profile form, mood stats). Light, quiet, plenty of air. Chinese UI copy.
+Name: 有点情绪 (project slug: littlemo). Binding UI: the two provided interaction drafts (WeChat-like thread, left drawer, profile form, mood stats). Light, quiet, plenty of air. Chinese UI copy.
 
 ## Evidence on Hand
 

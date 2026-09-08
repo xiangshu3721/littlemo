@@ -13,7 +13,7 @@ export default function MinePage() {
       return;
     }
     const user = getUser();
-    setName(user?.nickname || "碎碎念");
+    setName(user?.nickname || "有点情绪");
   });
 
   function onPrivacy() {

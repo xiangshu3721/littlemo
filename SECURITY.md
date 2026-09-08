@@ -1,6 +1,6 @@
 # Security
 
-Short audit of this local-first companion app. Scope: Next.js App Router API proxies, client IndexedDB, image handling, XSS, secrets. No account system in this version.
+Short audit of 有点情绪 (littlemo), a local-first companion app. Scope: Next.js App Router API proxies, client IndexedDB, image handling, XSS, secrets. No account system in this version.
 
 ## Findings and fixes
 

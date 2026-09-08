@@ -1,4 +1,4 @@
-import { prisma, type User } from "@suisuinian/db";
+import { prisma, type User } from "@littlemo/db";
 import { SignJWT, jwtVerify } from "jose";
 import { apiJson } from "./cors";
 import { clipText } from "./limits";

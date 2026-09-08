@@ -8,7 +8,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@suisuinian/db"],
+  transpilePackages: ["@littlemo/db"],
   serverExternalPackages: ["@prisma/client"],
   async headers() {
     return [

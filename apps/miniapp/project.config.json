@@ -1,7 +1,7 @@
 {
   "miniprogramRoot": "dist/",
-  "projectname": "suisuinian",
-  "description": "碎碎念",
+  "projectname": "littlemo",
+  "description": "有点情绪",
   "appid": "touristappid",
   "setting": {
     "urlCheck": false,

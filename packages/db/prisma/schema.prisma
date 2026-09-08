@@ -1,4 +1,4 @@
-// 碎碎念 cloud models (PostgreSQL).
+// 有点情绪 cloud models (PostgreSQL).
 // Mini-program V1 uses User / Note / ChatMessage only.
 // Web insight/analyze/period stay local (IndexedDB) and are not stored here.
 

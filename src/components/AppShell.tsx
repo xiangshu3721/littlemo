@@ -27,7 +27,7 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const { profile } = useStore();
-  const heading = title || profile.nickname || "碎碎念";
+  const heading = title || profile.nickname || "有点情绪";
 
   return (
     <div className="flex h-[100dvh] justify-center overflow-hidden bg-desk">
@@ -47,7 +47,7 @@ export function AppShell({
         {composer ? <div className="chrome shrink-0">{composer}</div> : null}
         <nav className="chrome grid shrink-0 grid-cols-4 pb-[max(10px,env(safe-area-inset-bottom))] pt-1.5">
           <div className="hairline col-span-4 mb-1.5" />
-          <Tab href="/" label="碎碎念" icon={IconChat} active={pathname === "/"} />
+          <Tab href="/" label="有点情绪" icon={IconChat} active={pathname === "/"} />
           <Tab href="/stats" label="情绪日记" icon={IconDiary} active={pathname.startsWith("/stats")} />
           <Tab href="/insight" label="情绪洞察" icon={IconInsight} active={pathname.startsWith("/insight")} />
           <Tab href="/me" label="我" icon={IconMe} active={pathname.startsWith("/me")} />
@@ -156,7 +156,7 @@ function Drawer() {
         </div>
         <div className="hairline mx-5 mb-3" />
         <nav className="flex flex-col px-2 text-[15px] text-ink">
-          <DrawerLink onClick={() => go("/")} label="碎碎念" icon={IconChat} active={pathname === "/"} />
+          <DrawerLink onClick={() => go("/")} label="有点情绪" icon={IconChat} active={pathname === "/"} />
           <DrawerLink onClick={() => go("/stats")} label="情绪日记" icon={IconDiary} active={pathname.startsWith("/stats")} />
           <DrawerLink onClick={() => go("/insight")} label="情绪洞察" icon={IconInsight} active={pathname.startsWith("/insight")} />
           <DrawerLink onClick={() => go("/trash")} label="回收站" icon={IconTrash} active={pathname.startsWith("/trash")} />

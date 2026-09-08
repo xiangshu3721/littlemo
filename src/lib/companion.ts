@@ -1,7 +1,7 @@
 import { wrapUntrusted } from "./api-guard";
 import { LIMITS, clipText } from "./limits";
 
-export const COMPANION_SYSTEM = `你是「碎碎念」里的倾听者。用户在向你倾诉这一刻的心情。
+export const COMPANION_SYSTEM = `你是「有点情绪」里的倾听者。用户在向你倾诉这一刻的心情。
 
 你只陪伴、倾听，用克制、温暖、短的中文回话。像朋友坐在旁边，不要像医生、教练、分析师或报告生成器。
 

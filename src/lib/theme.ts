@@ -1,4 +1,4 @@
-export const THEME_STORAGE_KEY = "suisuinian.theme";
+export const THEME_STORAGE_KEY = "littlemo.theme";
 
 /** Local-clock window for 「跟随时间」. Device timezone; 06:00–18:59 light, 19:00–05:59 dark. */
 export const AUTO_LIGHT_HOUR = 6;

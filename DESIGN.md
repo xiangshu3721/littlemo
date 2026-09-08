@@ -18,7 +18,7 @@ Two rooms, same companion. Day is a clean paper journal on a pale desk: white sh
 
 ## Appearance
 
-Modes: `light` | `dark` | `system` (跟随时间). Stored in `localStorage` key `suisuinian.theme`. Manual day/night stops following the clock until 跟随时间 is chosen again.
+Modes: `light` | `dark` | `system` (跟随时间). Stored in `localStorage` key `littlemo.theme`. Manual day/night stops following the clock until 跟随时间 is chosen again.
 
 Auto window (device local clock, same hours as Asia/Shanghai wall time): light `06:00–18:59`, dark `19:00–05:59`. Documented on `/settings`. Toggle lives in the header, the drawer, and settings.
 

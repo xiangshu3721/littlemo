@@ -1,3 +1,3 @@
 export default definePageConfig({
-  navigationBarTitleText: "碎碎念",
+  navigationBarTitleText: "有点情绪",
 });

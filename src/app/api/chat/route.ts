@@ -1,4 +1,4 @@
-import { prisma, type ChatMessage, type Note } from "@suisuinian/db";
+import { prisma, type ChatMessage, type Note } from "@littlemo/db";
 import { NextResponse } from "next/server";
 import {
   clipGuideContext,

@@ -13,7 +13,7 @@ type LegacyEntry = {
   deletedAt?: number;
 };
 
-const DB_NAME = "suisuinian";
+const DB_NAME = "littlemo";
 const VERSION = 2;
 
 function openDb(): Promise<IDBDatabase> {

@@ -32,7 +32,7 @@ export default function LoginPage() {
   return (
     <View className="login">
       <View className="login__mark" />
-      <Text className="login__title">碎碎念</Text>
+      <Text className="login__title">有点情绪</Text>
       <Text className="login__body">繁华之外的心灵净土，让灵魂慢一点，让烦恼少一些</Text>
       <Button className="login__btn" onClick={onLogin}>
         {busy ? "在进去…" : "进入"}

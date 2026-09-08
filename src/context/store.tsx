@@ -36,7 +36,7 @@ import type {
   Session,
 } from "@/lib/types";
 
-const PROFILE_KEY = "suisuinian.profile";
+const PROFILE_KEY = "littlemo.profile";
 
 const defaultProfile: Profile = {
   nickname: "阿布",
