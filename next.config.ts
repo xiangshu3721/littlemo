@@ -8,6 +8,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@suisuinian/db"],
+  serverExternalPackages: ["@prisma/client"],
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

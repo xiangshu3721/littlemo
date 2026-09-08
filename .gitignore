@@ -2,6 +2,11 @@
 
 # dependencies
 /node_modules
+/apps/miniapp/node_modules
+/packages/**/node_modules
+/apps/miniapp/dist
+/apps/miniapp/.temp
+/apps/miniapp/.swc
 /.pnp
 .pnp.*
 .yarn/*
@@ -33,6 +38,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+!**/.env.example
 
 # vercel
 .vercel
