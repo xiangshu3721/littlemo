@@ -18,9 +18,13 @@ export const LIMITS = {
   jsonBodyChat: 220_000,
   jsonBodyAnalyze: 180_000,
   jsonBodyPeriod: 180_000,
+  jsonBodyAuth: 4_096,
+  jsonBodyNotes: 24_000,
   rateChatPerMin: 24,
   rateAnalyzePerMin: 8,
   ratePeriodPerMin: 6,
+  rateAuthPerMin: 20,
+  rateNotesPerMin: 40,
 } as const;
 
 export function clipText(value: unknown, max: number) {
