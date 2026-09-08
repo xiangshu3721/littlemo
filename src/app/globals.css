@@ -1,26 +1,152 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --desk: #b9b0a4;
+  --paper: #f4efe6;
+  --wash: #ebe3d6;
+  --bubble: #fff9f0;
+  --ink: #2a221b;
+  --ink-soft: #5a4e43;
+  --ink-faint: #8d7f72;
+  --line: #ddd2c3;
+  --accent: #3d6a74;
+  --accent-ink: #f7f3ea;
+  --shadow: 0 10px 28px rgba(48, 38, 28, 0.07);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-desk: var(--desk);
+  --color-paper: var(--paper);
+  --color-wash: var(--wash);
+  --color-bubble: var(--bubble);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-sans-face), "Noto Sans SC", sans-serif;
+  --font-display: var(--font-display-face), "Noto Serif SC", serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--desk);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, white);
+  color: var(--ink);
+}
+
+textarea,
+input {
+  caret-color: var(--accent);
+}
+
+:focus-visible {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.phone {
+  background-color: var(--paper);
+  background-image: var(--grain);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.sheet {
+  border-radius: 22px;
+  background: color-mix(in srgb, white 78%, var(--bubble));
+  box-shadow: var(--shadow);
+}
+
+.hairline {
+  background: linear-gradient(90deg, transparent, var(--line) 12%, var(--line) 88%, transparent);
+  height: 1px;
+}
+
+.field {
+  width: 100%;
+  border-radius: 16px;
+  background: var(--wash);
+  padding: 0.75rem 0.95rem;
+  font-size: 15px;
+  color: var(--ink);
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.field::placeholder {
+  color: var(--ink-faint);
+}
+
+.btn-accent {
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
+}
+
+.btn-accent:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-accent:disabled {
+  opacity: 0.45;
+}
+
+.pill {
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.pill-on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.pill-off {
+  background: transparent;
+  color: var(--ink-soft);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+dialog {
+  border: 0;
+}
+
+dialog::backdrop {
+  background: rgb(42 34 27 / 0.34);
+}
+
+.feed-scroll {
+  scrollbar-gutter: stable;
+}
+
+.feed-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.feed-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ink-faint) 55%, transparent);
+  border-radius: 99px;
+}
+
+.feed-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }
