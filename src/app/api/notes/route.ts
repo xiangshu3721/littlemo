@@ -1,4 +1,4 @@
-import { prisma, type Note } from "@suisuinian/db";
+import { prisma, type Note } from "@littlemo/db";
 import { publicError, rateLimit, readJsonBody } from "@/lib/api-guard";
 import { requireUser } from "@/lib/auth";
 import { apiJson, preflight, withCors } from "@/lib/cors";

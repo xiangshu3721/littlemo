@@ -1,8 +1,8 @@
 {
-  "name": "suisuinian-miniapp",
+  "name": "littlemo-miniapp",
   "version": "0.1.0",
   "private": true,
-  "description": "碎碎念微信小程序 V1：记下这一刻，AI 只陪伴，不做情绪洞察。",
+  "description": "有点情绪微信小程序 V1：记下这一刻，AI 只陪伴，不做情绪洞察。",
   "templateInfo": {
     "name": "default",
     "typescript": true,

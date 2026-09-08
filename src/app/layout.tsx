@@ -4,11 +4,11 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "碎碎念",
+  title: "有点情绪",
   description: "像聊天一样记下这一刻的情绪。",
   appleWebApp: {
     capable: true,
-    title: "碎碎念",
+    title: "有点情绪",
     statusBarStyle: "default",
   },
 };

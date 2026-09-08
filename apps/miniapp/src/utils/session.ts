@@ -1,7 +1,7 @@
 import Taro from "@tarojs/taro";
 
-const TOKEN_KEY = "suisuinian.token";
-const USER_KEY = "suisuinian.user";
+const TOKEN_KEY = "littlemo.token";
+const USER_KEY = "littlemo.user";
 
 export type SessionUser = {
   id: string;

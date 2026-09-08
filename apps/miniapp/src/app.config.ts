@@ -3,7 +3,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: "light",
     navigationBarBackgroundColor: "#f7f7f7",
-    navigationBarTitleText: "碎碎念",
+    navigationBarTitleText: "有点情绪",
     navigationBarTextStyle: "black",
     backgroundColor: "#e8e8e6",
   },
@@ -15,7 +15,7 @@ export default defineAppConfig({
     list: [
       {
         pagePath: "pages/index/index",
-        text: "碎碎念",
+        text: "有点情绪",
       },
       {
         pagePath: "pages/mine/index",

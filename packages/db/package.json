@@ -1,5 +1,5 @@
 {
-  "name": "@suisuinian/db",
+  "name": "@littlemo/db",
   "version": "0.1.0",
   "private": true,
   "main": "./src/index.ts",

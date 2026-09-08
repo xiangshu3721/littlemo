@@ -24,7 +24,7 @@ export default function SettingsPage() {
         <section className="sheet px-4 py-4">
           <h2 className="font-display text-[16px] font-medium tracking-wide text-ink">数据</h2>
           <p className="mt-2">
-            碎碎念先存在这台手机的浏览器里（IndexedDB）。清掉站点数据，记录也会一起消失。外观偏好另外记在本机 localStorage，清站点数据时会一起重置为跟随时间。
+            有点情绪先存在这台手机的浏览器里（IndexedDB）。清掉站点数据，记录也会一起消失。外观偏好另外记在本机 localStorage，清站点数据时会一起重置为跟随时间。
           </p>
         </section>
         <section className="sheet px-4 py-4">
@@ -35,7 +35,7 @@ export default function SettingsPage() {
         </section>
         <section className="sheet px-4 py-4">
           <h2 className="font-display text-[16px] font-medium tracking-wide text-ink">关于</h2>
-          <p className="mt-2">碎碎念网页版。记录本身不评分、不打卡、不排行。</p>
+          <p className="mt-2">有点情绪网页版。记录本身不评分、不打卡、不排行。</p>
         </section>
       </div>
     </AppShell>

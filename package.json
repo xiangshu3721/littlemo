@@ -1,5 +1,5 @@
 {
-  "name": "suisuinian-app",
+  "name": "littlemo-app",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
@@ -10,16 +10,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:generate": "npm run generate --workspace=@suisuinian/db",
-    "db:migrate": "npm run migrate --workspace=@suisuinian/db",
-    "db:deploy": "npm run migrate:deploy --workspace=@suisuinian/db",
+    "db:generate": "npm run generate --workspace=@littlemo/db",
+    "db:migrate": "npm run migrate --workspace=@littlemo/db",
+    "db:deploy": "npm run migrate:deploy --workspace=@littlemo/db",
     "miniapp:install": "npm install --prefix apps/miniapp",
     "miniapp:dev": "npm run dev:weapp --prefix apps/miniapp",
     "miniapp:build": "npm run build:weapp --prefix apps/miniapp"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
-    "@suisuinian/db": "*",
+    "@littlemo/db": "*",
     "jose": "^6.1.0",
     "next": "16.3.4",
     "react": "19.2.8",
