@@ -40,7 +40,7 @@ export function ChatFeed({ messages = [] }: { messages: Message[] }) {
     return (
       <EmptyState
         title="去记下这一刻"
-        body="想说就说。我陪你往里看一步，不急着分段，也不拿问卷问你。"
+        body="无论乱、轻，还是说不清，都可以放在这里。不评判、不催促，我只轻轻陪着你，把这一刻安放好。"
       />
     );
   }
