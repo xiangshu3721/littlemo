@@ -18,7 +18,7 @@ function joinUrl(path: string) {
 
 export async function api<T>(
   path: string,
-  options: { method?: Method; data?: unknown; auth?: boolean } = {},
+  options: { method?: Method; data?: unknown; auth?: boolean; timeout?: number } = {},
 ): Promise<T> {
   const method = options.method || "GET";
   const header: Record<string, string> = {
@@ -34,7 +34,7 @@ export async function api<T>(
     method,
     data: options.data,
     header,
-    timeout: 30_000,
+    timeout: options.timeout ?? 30_000,
   });
 
   const status = res.statusCode || 0;

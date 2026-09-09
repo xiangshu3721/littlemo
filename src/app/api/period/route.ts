@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import {
   asPeriodKind,
   clipPeriodEntries,
@@ -7,6 +6,7 @@ import {
   rateLimit,
   readJsonBody,
 } from "@/lib/api-guard";
+import { apiJson, preflight, withCors } from "@/lib/cors";
 import { analyzePeriod } from "@/lib/deepseek";
 import { LIMITS, clipText } from "@/lib/limits";
 import type { PeriodKind, PeriodPayloadEntry } from "@/lib/types";
@@ -14,11 +14,14 @@ import type { PeriodKind, PeriodPayloadEntry } from "@/lib/types";
 export const GET = methodNotAllowed;
 export const PUT = methodNotAllowed;
 export const DELETE = methodNotAllowed;
-export const OPTIONS = methodNotAllowed;
+
+export function OPTIONS(req: Request) {
+  return preflight(req);
+}
 
 export async function POST(req: Request) {
   const limited = rateLimit(req, LIMITS.ratePeriodPerMin);
-  if (limited) return limited;
+  if (limited) return withCors(req, limited);
   try {
     const parsed = await readJsonBody<{
       kind?: PeriodKind;
@@ -26,10 +29,10 @@ export async function POST(req: Request) {
       digest?: string;
       entries?: PeriodPayloadEntry[];
     }>(req, LIMITS.jsonBodyPeriod);
-    if (!parsed.ok) return parsed.response;
+    if (!parsed.ok) return withCors(req, parsed.response);
     const kind = asPeriodKind(parsed.data.kind);
     if (!kind) {
-      return NextResponse.json({ error: "范围不对" }, { status: 400 });
+      return apiJson(req, { error: "范围不对" }, 400);
     }
     const report = await analyzePeriod(
       kind,
@@ -37,8 +40,8 @@ export async function POST(req: Request) {
       clipPeriodEntries(parsed.data.entries),
       clipText(parsed.data.digest, LIMITS.digestChars),
     );
-    return NextResponse.json({ report });
+    return apiJson(req, { report });
   } catch (err) {
-    return NextResponse.json({ error: publicError(err, "分析失败") }, { status: 500 });
+    return apiJson(req, { error: publicError(err, "分析失败") }, 500);
   }
 }

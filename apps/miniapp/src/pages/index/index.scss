@@ -96,12 +96,40 @@
 }
 
 .home__composer {
+  padding: 8px 14px 18px;
+  background: #f7f7f7;
+  border-top: 1px solid #e5e5e5;
+}
+
+.home__close {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 8px 0;
+  background: transparent;
+  color: #4a4a4a;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.home__close[disabled] {
+  opacity: 0.5;
+}
+
+.home__archive {
+  display: block;
+  padding: 4px 0 12px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #999999;
+}
+
+.home__row {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  padding: 10px 14px 18px;
-  background: #f7f7f7;
-  border-top: 1px solid #e5e5e5;
 }
 
 .home__input {
