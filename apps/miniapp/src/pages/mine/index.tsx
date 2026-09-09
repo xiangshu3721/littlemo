@@ -19,7 +19,7 @@ export default function MinePage() {
   function onPrivacy() {
     Taro.showModal({
       title: "隐私",
-      content: "记录存在你的账号里。密钥只放在服务器。小程序不做情绪洞察、周报或分析。",
+      content: "陪伴对话会记在账号里。点「就聊到这」收进的情绪日记和深度洞察先存在这台设备上；分析密钥只放在服务器。",
       showCancel: false,
       confirmText: "知道了",
       confirmColor: "#5f6f52",
@@ -53,7 +53,7 @@ export default function MinePage() {
       <Button className="mine__row mine__row--last" onClick={onLogout}>
         退出登录
       </Button>
-      <Text className="mine__foot">V1 不做情绪洞察。网页版的分析接口不会在这里调用。</Text>
+      <Text className="mine__foot">点「就聊到这」后，深度洞察会出现在「情绪日记」。清掉小程序数据，本机日记也会一起消失。</Text>
     </View>
   );
 }

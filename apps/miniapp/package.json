@@ -2,7 +2,7 @@
   "name": "littlemo-miniapp",
   "version": "0.1.0",
   "private": true,
-  "description": "有点情绪微信小程序 V1：记下这一刻，AI 只陪伴，不做情绪洞察。",
+  "description": "有点情绪微信小程序：陪伴聊天 + 情绪日记（日历、深度洞察、阶段规律）。",
   "templateInfo": {
     "name": "default",
     "typescript": true,

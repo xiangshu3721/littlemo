@@ -1,143 +1,205 @@
 import { View, Text, Button, ScrollView } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { daysInMonth, startOfWeek, toDay } from "../../utils/diary-dates";
+import { moodById } from "../../utils/diary-moods";
+import { hydrateFromCloud, liveMessages, liveSessions, resumePendingAnalysis } from "../../utils/diary-store";
+import type { MoodId, Session } from "../../utils/diary-types";
 import { api, ApiError } from "../../utils/api";
 import { isLoggedIn } from "../../utils/session";
+import { SessionDigest } from "./digest";
+import { PeriodInsight } from "./insight";
 import "./index.scss";
 
-type Note = {
-  id: string;
-  content: string;
-  createdAt: string;
-};
-
-type DayGroup = {
-  key: string;
-  label: string;
-  notes: Note[];
-};
-
-const PREVIEW_LEN = 90;
-
-function dayKey(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function formatDay(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const md = `${d.getMonth() + 1}月${d.getDate()}日`;
-  return d.getFullYear() === new Date().getFullYear() ? md : `${d.getFullYear()}年${md}`;
-}
-
-function clock(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
-
-function groupByDay(notes: Note[]): DayGroup[] {
-  const map = new Map<string, DayGroup>();
-  const sorted = [...notes].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  for (const note of sorted) {
-    const key = dayKey(note.createdAt) || note.id;
-    const existing = map.get(key);
-    if (existing) existing.notes.push(note);
-    else map.set(key, { key, label: formatDay(note.createdAt), notes: [note] });
-  }
-  return [...map.values()];
-}
-
-function preview(content: string, expanded: boolean) {
-  const text = content.trim();
-  if (expanded || text.length <= PREVIEW_LEN) return text;
-  return `${text.slice(0, PREVIEW_LEN).trimEnd()}…`;
-}
+type Tab = "calendar" | "period";
 
 export default function DiaryPage() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("calendar");
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [messages, setMessages] = useState(liveMessages());
+  const [cursor, setCursor] = useState(() => new Date());
+  const [pickedDay, setPickedDay] = useState<string>(() => toDay(new Date()));
+  const [monthOpen, setMonthOpen] = useState(false);
+  const [tick, setTick] = useState(0);
 
-  const groups = useMemo(() => groupByDay(notes), [notes]);
+  function refresh() {
+    setSessions(liveSessions());
+    setMessages(liveMessages());
+    setTick((n) => n + 1);
+  }
 
   async function load() {
     if (!isLoggedIn()) {
       Taro.redirectTo({ url: "/pages/login/index" });
       return;
     }
-    setLoading(true);
-    setError("");
     try {
-      const res = await api<{ notes: Note[] }>("/api/notes");
-      setNotes(res.notes || []);
+      const [noteRes, chatRes] = await Promise.all([
+        api<{ notes: { id: string; content: string; createdAt: string }[] }>("/api/notes"),
+        api<{ messages: { id: string; role: string; content: string; createdAt: string }[] }>("/api/chat"),
+      ]);
+      await hydrateFromCloud(noteRes.notes || [], chatRes.messages || []);
+      void resumePendingAnalysis();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         Taro.redirectTo({ url: "/pages/login/index" });
         return;
       }
-      setError(err instanceof ApiError ? err.message : "记录读不出来");
-    } finally {
-      setLoading(false);
     }
+    refresh();
   }
+
+  const pendingAnalysis = sessions.some((s) => s.analysisStatus === "pending");
 
   useDidShow(() => {
     void load();
   });
 
-  function toggle(id: string, long: boolean) {
-    if (!long) return;
-    setExpandedId((cur) => (cur === id ? null : id));
-  }
+  useEffect(() => {
+    if (!pendingAnalysis) return undefined;
+    const timer = setInterval(() => refresh(), 1200);
+    return () => clearInterval(timer);
+  }, [pendingAnalysis]);
+
+  const year = cursor.getFullYear();
+  const month = cursor.getMonth();
+
+  const marksByDay = useMemo(() => {
+    const map = new Map<string, { mood?: MoodId; has: boolean }>();
+    const bump = (day: string, mood?: MoodId) => {
+      const cur = map.get(day) || { has: false };
+      map.set(day, { has: true, mood: mood || cur.mood });
+    };
+    for (const session of sessions) {
+      bump(session.day, session.mood);
+      for (const m of messages) {
+        if (m.sessionId === session.id) bump(m.day, session.mood);
+      }
+    }
+    return map;
+  }, [sessions, messages, tick]);
+
+  const daySessions = pickedDay
+    ? sessions
+        .filter((s) =>
+          messages.some((m) => m.sessionId === s.id && m.day === pickedDay && m.role === "user" && m.text.trim()),
+        )
+        .sort((a, b) => {
+          const last = (id: string) =>
+            messages
+              .filter((m) => m.sessionId === id && m.day === pickedDay)
+              .reduce((t, m) => Math.max(t, m.createdAt), 0);
+          return last(b.id) - last(a.id);
+        })
+    : [];
+
+  const calendarDays = useMemo(() => {
+    if (monthOpen) {
+      const pad = (new Date(year, month, 1).getDay() + 6) % 7;
+      const total = daysInMonth(year, month);
+      return [
+        ...Array.from({ length: pad }, () => null as Date | null),
+        ...Array.from({ length: total }, (_, i) => new Date(year, month, i + 1)),
+      ];
+    }
+    const prefix = `${year}-${String(month + 1).padStart(2, "0")}`;
+    const anchor = pickedDay.startsWith(prefix)
+      ? new Date(`${pickedDay}T12:00:00`)
+      : new Date(year, month, 1);
+    const start = startOfWeek(anchor);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      return d;
+    });
+  }, [monthOpen, year, month, pickedDay]);
 
   return (
     <View className="diary">
+      <View className="tabs">
+        <Button className={`tabs__btn ${tab === "calendar" ? "tabs__btn--on" : ""}`} onClick={() => setTab("calendar")}>
+          日历
+        </Button>
+        <Button className={`tabs__btn ${tab === "period" ? "tabs__btn--on" : ""}`} onClick={() => setTab("period")}>
+          这一段日子
+        </Button>
+      </View>
       <ScrollView className="diary__feed" scrollY>
-        {loading ? (
-          <View className="diary__state">
-            <View className="diary__seal" />
-            <Text className="diary__state-title">在读…</Text>
-          </View>
-        ) : error ? (
-          <View className="diary__state">
-            <View className="diary__seal" />
-            <Text className="diary__state-title">这一页没打开</Text>
-            <Text className="diary__state-body">{error}</Text>
-            <Button className="diary__retry" onClick={() => void load()}>
-              再试一次
+        {tab === "calendar" ? (
+          <View>
+            <View className="cal__nav">
+              <Button
+                className="cal__arrow"
+                onClick={() => setCursor(new Date(year, month - 1, 1))}
+              >
+                ‹
+              </Button>
+              <Text className="cal__title">
+                {year}年{month + 1}月
+              </Text>
+              <Button
+                className="cal__arrow"
+                onClick={() => setCursor(new Date(year, month + 1, 1))}
+              >
+                ›
+              </Button>
+            </View>
+            <Button className="cal__fold" onClick={() => setMonthOpen((v) => !v)}>
+              {monthOpen ? "收起月历" : "展开月历"}
+              <Text className={`sheet__caret ${monthOpen ? "sheet__caret--open" : ""}`}>⌄</Text>
             </Button>
-          </View>
-        ) : groups.length === 0 ? (
-          <View className="diary__state">
-            <View className="diary__seal" />
-            <Text className="diary__state-title">还没有记下</Text>
-            <Text className="diary__state-body">去「有点情绪」写下这一刻，就会出现在这里。</Text>
-          </View>
-        ) : (
-          groups.map((group) => (
-            <View key={group.key} className="diary__group">
-              <Text className="diary__day">{group.label}</Text>
-              {group.notes.map((note) => {
-                const long = note.content.trim().length > PREVIEW_LEN;
-                const open = expandedId === note.id;
+            <View className="cal__week">
+              {"一二三四五六日".split("").map((d) => (
+                <Text key={d} className="cal__wd">
+                  {d}
+                </Text>
+              ))}
+            </View>
+            <View className="cal__grid">
+              {calendarDays.map((date, i) => {
+                if (!date) return <View key={`e-${i}`} className="cal__cell" />;
+                const day = toDay(date);
+                const inMonth = date.getMonth() === month;
+                const mark = marksByDay.get(day);
+                const selected = pickedDay === day;
+                const mood = mark?.mood ? moodById(mark.mood) : undefined;
                 return (
                   <View
-                    key={note.id}
-                    className="diary__card"
-                    onClick={() => toggle(note.id, long)}
+                    key={day}
+                    className={`cal__cell ${selected ? "cal__cell--on" : ""} ${inMonth ? "" : "cal__cell--out"}`}
+                    onClick={() => {
+                      setPickedDay(day);
+                      if (date.getMonth() !== month) setCursor(new Date(date.getFullYear(), date.getMonth(), 1));
+                    }}
                   >
-                    <Text className="diary__time">{clock(note.createdAt)}</Text>
-                    <Text className="diary__body">{preview(note.content, open)}</Text>
-                    {long ? <Text className="diary__more">{open ? "收起" : "展开"}</Text> : null}
+                    <Text className={`cal__num ${selected ? "cal__num--on" : ""}`}>{date.getDate()}</Text>
+                    {mood ? (
+                      <View className="cal__mood" style={{ background: mood.tint }} />
+                    ) : mark?.has ? (
+                      <View className={`cal__dot ${selected ? "cal__dot--on" : ""}`} />
+                    ) : (
+                      <View className="cal__spacer" />
+                    )}
                   </View>
                 );
               })}
             </View>
-          ))
+            {pickedDay ? (
+              <View className="day">
+                <Text className="chapter-mark">这一日</Text>
+                <Text className="day__title">{pickedDay}</Text>
+                {daySessions.length === 0 ? (
+                  <Text className="day__empty">这一天还没有记下的情绪。</Text>
+                ) : (
+                  daySessions.map((session) => (
+                    <SessionDigest key={`${session.id}-${tick}`} session={session} onChange={refresh} />
+                  ))
+                )}
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          <PeriodInsight sessions={sessions} messages={messages} />
         )}
       </ScrollView>
     </View>

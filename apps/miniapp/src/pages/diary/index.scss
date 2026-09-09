@@ -8,98 +8,739 @@
 .diary__feed {
   flex: 1;
   height: 0;
-  padding: 16px 16px 28px;
+  padding: 8px 16px 36px;
 }
 
-.diary__state {
-  min-height: 70vh;
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px 4px;
+  background: #f7f7f7;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.tabs__btn {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: transparent;
+  color: #4a4a4a;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tabs__btn--on {
+  background: #5f6f52;
+  color: #ffffff;
+}
+
+.cal__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+
+.cal__arrow {
+  width: 36px;
+  height: 36px;
+  color: #4a4a4a;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal__title {
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  color: #1a1a1a;
+}
+
+.cal__fold {
+  width: 100%;
+  margin: 4px 0 12px;
+  color: #4a4a4a;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.cal__week,
+.cal__grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.cal__wd,
+.cal__cell {
+  width: 14.28%;
+  text-align: center;
+}
+
+.cal__wd {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: #999999;
+}
+
+.cal__cell {
+  height: 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0 28px;
+  border-radius: 999px;
 }
 
-.diary__seal {
-  width: 48px;
-  height: 48px;
-  border: 1.4px solid #999999;
-  border-radius: 50%;
-  opacity: 0.65;
-  margin-bottom: 20px;
+.cal__cell--on {
+  background: #8a4a42;
 }
 
-.diary__state-title {
-  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
-  font-size: 22px;
+.cal__cell--out {
+  opacity: 0.35;
+}
+
+.cal__num {
+  font-size: 13px;
   color: #1a1a1a;
-  letter-spacing: 0.04em;
 }
 
-.diary__state-body {
+.cal__num--on {
+  color: #f7f7f7;
+}
+
+.cal__mood,
+.cal__dot,
+.cal__spacer {
+  width: 8px;
+  height: 8px;
+  margin-top: 2px;
+  border-radius: 50%;
+}
+
+.cal__dot {
+  background: rgba(95, 111, 82, 0.7);
+}
+
+.cal__dot--on {
+  background: rgba(247, 247, 247, 0.8);
+}
+
+.cal__spacer {
+  background: transparent;
+}
+
+.day {
+  margin-top: 24px;
+}
+
+.day__title {
+  display: block;
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.day__empty {
+  display: block;
+  padding-top: 8px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #4a4a4a;
+}
+
+.chapter-mark {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #999999;
+  margin-bottom: 4px;
+}
+
+.sheet {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.sheet__title {
+  display: block;
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+}
+
+.sheet__meta {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: #999999;
+}
+
+.sheet__emotions {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #4a4a4a;
+}
+
+.sheet__preview {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #4a4a4a;
+  overflow: hidden;
+}
+
+.sheet__hint {
+  display: block;
   margin-top: 12px;
-  max-width: 220px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #999999;
+}
+
+.sheet__block {
+  margin-top: 12px;
+}
+
+.sheet__block--line {
+  border-top: 1px solid #e5e5e5;
+  padding-top: 8px;
+}
+
+.sheet__toggle,
+.sheet__action,
+.sheet__faint,
+.nav__ghost {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: auto;
+  height: auto;
+  padding: 4px 0;
+  background: transparent;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: #4a4a4a;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.sheet__toggle--accent,
+.sheet__action {
+  color: #5f6f52;
+}
+
+.sheet__faint {
+  font-size: 12px;
+  color: #999999;
+}
+
+.sheet__caret {
+  font-size: 12px;
+}
+
+.sheet__caret--open {
+  transform: rotate(180deg);
+}
+
+.sheet__line {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #4a4a4a;
+  overflow-wrap: anywhere;
+}
+
+.sheet__foot {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sheet__inner {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(229, 229, 229, 0.7);
+}
+
+.sheet__gap {
+  height: 16px;
+}
+
+.flow {
+  margin-top: 12px;
+}
+
+.flow__title {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+}
+
+.flow__body,
+.chapter__p {
+  display: block;
   font-size: 14px;
   line-height: 1.8;
   color: #4a4a4a;
-  text-align: center;
+  overflow-wrap: anywhere;
 }
 
-.diary__retry {
-  margin-top: 28px;
-  width: 140px;
-  height: 40px;
+.flow__arrow {
+  display: block;
+  padding: 6px 0;
+  text-align: center;
+  font-size: 12px;
+  color: #999999;
+}
+
+.insight {
+  padding-top: 4px;
+  padding-bottom: 24px;
+}
+
+.pills {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pill {
+  height: 32px;
+  padding: 0 14px;
   border-radius: 999px;
-  background: #5f6f52;
-  color: #ffffff;
-  font-size: 14px;
-  letter-spacing: 0.08em;
+  background: #f0f0ee;
+  color: #4a4a4a;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.diary__group {
-  margin-bottom: 8px;
+.pill--on {
+  background: #5f6f52;
+  color: #ffffff;
 }
 
-.diary__day {
+.insight__month {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #4a4a4a;
+}
+
+.insight__label {
+  color: #1a1a1a;
+}
+
+.insight__faint,
+.insight__empty {
   display: block;
-  padding: 8px 4px 10px;
-  font-size: 12px;
-  letter-spacing: 0.12em;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.8;
   color: #999999;
 }
 
-.diary__card {
-  background: #ffffff;
-  border: 1px solid #e5e5e5;
-  border-radius: 20px;
-  padding: 14px 16px 16px;
-  margin-bottom: 10px;
+.insight__empty {
+  padding-top: 16px;
+  font-size: 14px;
+  color: #4a4a4a;
 }
 
-.diary__time {
+.insight__err {
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #c45c4a;
+}
+
+.plate {
+  height: 120px;
+  margin-bottom: 24px;
+  padding: 0 20px 16px;
+  border-radius: 20px;
+  background: #f0f0ee;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.plate__title {
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+}
+
+.chapter {
+  margin-bottom: 40px;
+}
+
+.chapter__title {
   display: block;
+  margin: 4px 0 12px;
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+}
+
+.chapter__p {
+  margin-top: 10px;
+}
+
+.ring {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ring__count {
+  width: 88px;
+  height: 88px;
+  border: 10px solid #5f6f52;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ring__num {
+  font-size: 22px;
+  color: #1a1a1a;
+}
+
+.ring__unit {
   font-size: 11px;
   color: #999999;
-  letter-spacing: 0.04em;
+}
+
+.ring__legend {
+  flex: 1;
+}
+
+.ring__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 8px;
 }
 
-.diary__body {
-  display: block;
-  font-size: 15px;
-  line-height: 1.7;
-  color: #1a1a1a;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+.ring__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.diary__more {
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dot--ink {
+  background: #1a1a1a;
+}
+
+.dot--accent {
+  background: #5f6f52;
+}
+
+.dot--wash {
+  background: #c8c4bc;
+}
+
+.ring__name,
+.ring__value {
+  font-size: 13px;
+  color: #4a4a4a;
+}
+
+.ring__value {
+  color: #1a1a1a;
+}
+
+.rail {
+  margin-top: 4px;
+}
+
+.rail__head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.rail__label {
+  font-size: 13px;
+  color: #4a4a4a;
+}
+
+.rail__value {
+  font-size: 15px;
+  color: #1a1a1a;
+}
+
+.rail__track {
+  position: relative;
+  height: 24px;
+}
+
+.rail__fill {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  height: 3px;
+  background: #5f6f52;
+  border-radius: 999px;
+}
+
+.rail__track::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 10px;
+  height: 3px;
+  background: #e5e5e5;
+  border-radius: 999px;
+}
+
+.rail__knob {
+  position: absolute;
+  top: 2px;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  border: 2px solid #ffffff;
+}
+
+.rail__ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #999999;
+}
+
+.rank {
+  margin-bottom: 12px;
+}
+
+.rank__head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.rank__name,
+.rank__count {
+  font-size: 13px;
+  color: #1a1a1a;
+}
+
+.rank__idx {
+  margin-right: 8px;
+  color: #999999;
+}
+
+.rank__track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f0f0ee;
+}
+
+.rank__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #5f6f52;
+}
+
+.cols {
+  margin-top: 4px;
+}
+
+.cols__label {
   display: block;
-  margin-top: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #4a4a4a;
+}
+
+.cols__row {
+  display: flex;
+  align-items: flex-end;
+  height: 112px;
+  gap: 6px;
+}
+
+.cols__item {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.cols__n,
+.cols__name {
+  font-size: 10px;
+  color: #999999;
+}
+
+.cols__bar {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  background: #e5e5e5;
+}
+
+.cols__bar--on {
+  background: #5f6f52;
+  opacity: 0.85;
+}
+
+.delta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.delta__name {
+  width: 72px;
+  font-size: 13px;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.delta__track {
+  flex: 1;
+  position: relative;
+  height: 10px;
+}
+
+.delta__mid {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #e5e5e5;
+}
+
+.delta__fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.delta__fill--up {
+  background: #1a1a1a;
+}
+
+.delta__fill--down {
+  background: #5f6f52;
+}
+
+.delta__num {
+  width: 52px;
+  text-align: right;
+  font-size: 13px;
+  color: #4a4a4a;
+}
+
+.trend {
+  display: flex;
+  align-items: flex-end;
+  height: 140px;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.trend__col {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.trend__bar {
+  width: 70%;
+  max-width: 10px;
+  background: #5f6f52;
+  border-radius: 4px 4px 0 0;
+  opacity: 0.8;
+}
+
+.trend__bar--empty {
+  background: #e5e5e5;
+  opacity: 1;
+}
+
+.trend__lab {
+  margin-top: 4px;
+  font-size: 9px;
+  color: #999999;
+}
+
+.trend__empty {
+  display: block;
+  padding: 28px 0;
+  text-align: center;
   font-size: 12px;
-  letter-spacing: 0.08em;
-  color: #5f6f52;
+  color: #4a4a4a;
+}
+
+.loop__step {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: #f0f0ee;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a4a4a;
+}
+
+.unseen {
+  margin-top: 16px;
 }

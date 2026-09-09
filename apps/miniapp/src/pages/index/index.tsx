@@ -2,74 +2,59 @@ import { View, Text, Textarea, Button, ScrollView } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
 import { useMemo, useState } from "react";
 import { api, ApiError } from "../../utils/api";
+import { isArchiveMark } from "../../utils/diary-moods";
+import {
+  appendTurn,
+  hydrateFromCloud,
+  liveMessages,
+  liveSessions,
+  openTalkSession,
+  requestInsight,
+  resumePendingAnalysis,
+} from "../../utils/diary-store";
+import type { Message } from "../../utils/diary-types";
 import { isLoggedIn } from "../../utils/session";
 import "./index.scss";
 
-type Note = {
-  id: string;
-  content: string;
-  createdAt: string;
-};
-
-type ChatMessage = {
-  id: string;
-  role: string;
-  content: string;
-  createdAt: string;
-};
-
-type Bubble = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  createdAt: string;
-  pending?: boolean;
-};
-
-function mergeTimeline(notes: Note[], messages: ChatMessage[]): Bubble[] {
-  const user = notes.map((note) => ({
-    id: `note-${note.id}`,
-    role: "user" as const,
-    content: note.content,
-    createdAt: note.createdAt,
-  }));
-  const assistant = messages
-    .filter((row) => row.role === "assistant")
-    .map((row) => ({
-      id: `ai-${row.id}`,
-      role: "assistant" as const,
-      content: row.content,
-      createdAt: row.createdAt,
-    }));
-  return [...user, ...assistant].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-}
-
-function clock(iso: string) {
-  const d = new Date(iso);
+function clock(ts: number) {
+  const d = new Date(ts);
   if (Number.isNaN(d.getTime())) return "";
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 export default function HomePage() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [thread, setThread] = useState<Message[]>([]);
+  const [endedById, setEndedById] = useState<Record<string, boolean>>({});
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [canInsight, setCanInsight] = useState(false);
 
   const bubbles = useMemo(() => {
-    const list = mergeTimeline(notes, messages);
+    const list = [...thread];
     if (pending) {
       list.push({
         id: "pending",
+        sessionId: "",
         role: "assistant",
-        content: "在听…",
-        createdAt: new Date().toISOString(),
+        text: "在听…",
+        createdAt: Date.now(),
+        day: "",
         pending: true,
       });
     }
     return list;
-  }, [notes, messages, pending]);
+  }, [thread, pending]);
+
+  function syncLocal() {
+    const sessions = liveSessions();
+    const map: Record<string, boolean> = {};
+    for (const session of sessions) map[session.id] = Boolean(session.endedAt);
+    setEndedById(map);
+    setThread(liveMessages());
+    setCanInsight(Boolean(openTalkSession()));
+  }
 
   async function load() {
     if (!isLoggedIn()) {
@@ -78,11 +63,11 @@ export default function HomePage() {
     }
     try {
       const [noteRes, chatRes] = await Promise.all([
-        api<{ notes: Note[] }>("/api/notes"),
-        api<{ messages: ChatMessage[] }>("/api/chat"),
+        api<{ notes: { id: string; content: string; createdAt: string }[] }>("/api/notes"),
+        api<{ messages: { id: string; role: string; content: string; createdAt: string }[] }>("/api/chat"),
       ]);
-      setNotes(noteRes.notes || []);
-      setMessages(chatRes.messages || []);
+      await hydrateFromCloud(noteRes.notes || [], chatRes.messages || []);
+      void resumePendingAnalysis();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         Taro.redirectTo({ url: "/pages/login/index" });
@@ -93,6 +78,7 @@ export default function HomePage() {
         icon: "none",
       });
     }
+    syncLocal();
   }
 
   useDidShow(() => {
@@ -107,14 +93,19 @@ export default function HomePage() {
     setDraft("");
     try {
       const res = await api<{
-        note: Note;
-        reply: ChatMessage;
+        note: { createdAt: string };
+        reply: { content: string; createdAt: string };
       }>("/api/chat", {
         method: "POST",
         data: { content },
       });
-      setNotes((prev) => [...prev, res.note]);
-      setMessages((prev) => [...prev, res.reply]);
+      await appendTurn({
+        text: content,
+        reply: res.reply.content,
+        createdAt: new Date(res.note.createdAt).getTime() || Date.now(),
+        replyAt: new Date(res.reply.createdAt).getTime() || Date.now(),
+      });
+      syncLocal();
     } catch (err) {
       Taro.showToast({
         title: err instanceof ApiError ? err.message : "没接上",
@@ -126,9 +117,27 @@ export default function HomePage() {
     }
   }
 
+  async function closeAndInsight() {
+    if (!canInsight || closing || busy) return;
+    setClosing(true);
+    try {
+      await requestInsight();
+      syncLocal();
+    } catch (err) {
+      Taro.showToast({
+        title: err instanceof Error ? err.message : "没收进去",
+        icon: "none",
+      });
+    } finally {
+      setClosing(false);
+    }
+  }
+
+  const lastId = bubbles.at(-1)?.id;
+
   return (
     <View className="home">
-      <ScrollView className="home__feed" scrollY scrollIntoView={bubbles.at(-1)?.id}>
+      <ScrollView className="home__feed" scrollY scrollIntoView={lastId}>
         {bubbles.length === 0 ? (
           <View className="home__empty">
             <View className="home__seal" />
@@ -136,32 +145,53 @@ export default function HomePage() {
             <Text className="home__empty-body">繁华之外的心灵净土，让灵魂慢一点，让烦恼少一些</Text>
           </View>
         ) : (
-          bubbles.map((bubble) => (
-            <View
-              id={bubble.id}
-              key={bubble.id}
-              className={`bubble ${bubble.role === "user" ? "bubble--user" : "bubble--ai"}`}
-            >
-              <View className={`bubble__sheet ${bubble.pending ? "bubble__sheet--pending" : ""}`}>
-                <Text className="bubble__text">{bubble.content}</Text>
+          bubbles.map((bubble, index) => {
+            const next = bubbles[index + 1];
+            const archived =
+              isArchiveMark(bubble.text) ||
+              (Boolean(endedById[bubble.sessionId]) && (!next || next.sessionId !== bubble.sessionId));
+            const hideArchiveBubble = isArchiveMark(bubble.text) && bubble.role === "assistant";
+            return (
+              <View id={bubble.id} key={bubble.id}>
+                {hideArchiveBubble ? null : (
+                  <View className={`bubble ${bubble.role === "user" ? "bubble--user" : "bubble--ai"}`}>
+                    <View className={`bubble__sheet ${bubble.pending ? "bubble__sheet--pending" : ""}`}>
+                      <Text className="bubble__text">{bubble.text}</Text>
+                    </View>
+                    <Text className="bubble__time">{bubble.pending ? "" : clock(bubble.createdAt)}</Text>
+                  </View>
+                )}
+                {archived ? (
+                  <Text className="home__archive">这段已收进情绪日记，深度洞察可在日记里展开</Text>
+                ) : null}
               </View>
-              <Text className="bubble__time">{bubble.pending ? "" : clock(bubble.createdAt)}</Text>
-            </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
       <View className="home__composer">
-        <Textarea
-          className="home__input"
-          value={draft}
-          maxlength={4000}
-          autoHeight
-          placeholder="这一刻想说的…"
-          onInput={(e) => setDraft(e.detail.value)}
-        />
-        <Button className="home__send" disabled={busy || !draft.trim()} onClick={send}>
-          送出
-        </Button>
+        {canInsight ? (
+          <Button
+            className="home__close"
+            disabled={closing || busy}
+            onClick={() => void closeAndInsight()}
+          >
+            {closing ? "正在收这段…" : "就聊到这，帮我深度洞察下这段情绪"}
+          </Button>
+        ) : null}
+        <View className="home__row">
+          <Textarea
+            className="home__input"
+            value={draft}
+            maxlength={4000}
+            autoHeight
+            placeholder="想说就说…"
+            onInput={(e) => setDraft(e.detail.value)}
+          />
+          <Button className="home__send" disabled={busy || !draft.trim()} onClick={send}>
+            送出
+          </Button>
+        </View>
       </View>
     </View>
   );
