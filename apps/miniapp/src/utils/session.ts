@@ -22,6 +22,10 @@ export function saveSession(token: string, user: SessionUser) {
   Taro.setStorageSync(USER_KEY, user);
 }
 
+export function saveUser(user: SessionUser) {
+  Taro.setStorageSync(USER_KEY, user);
+}
+
 export function clearSession() {
   Taro.removeStorageSync(TOKEN_KEY);
   Taro.removeStorageSync(USER_KEY);

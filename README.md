@@ -75,7 +75,7 @@ curl -s -X POST http://localhost:3000/api/auth/wechat \
 
 之后请求带 `Authorization: Bearer <token>`：
 
-- `GET /api/me`
+- `GET /api/me`；`PATCH /api/me` `{ "avatar": "data:image/jpeg;base64,…" }`（头像 data URL，需登录）
 - `GET` / `POST` / `PATCH` / `DELETE /api/notes`（`PATCH`/`DELETE` 也可用 `/api/notes/:id`）
 - `GET /api/chat` 历史；`POST /api/chat` `{ "content": "…" }` 或 `{ "messages": […] }` → DeepSeek 陪伴回复并落库
 
