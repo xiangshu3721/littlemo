@@ -11,9 +11,11 @@ import {
 import { isArchiveMark } from "../../utils/diary-moods";
 import {
   appendTurn,
+  ensureOpenSession,
   hydrateFromCloud,
   liveMessages,
   liveSessions,
+  newDiaryId,
   openTalkSession,
   requestInsight,
   resumePendingAnalysis,
@@ -86,17 +88,13 @@ export default function HomePage() {
     }
     syncProfile(getUser());
     try {
-      const [noteRes, chatRes, meRes] = await Promise.all([
-        api<{ notes: { id: string; content: string; createdAt: string }[] }>("/api/notes"),
-        api<{ messages: { id: string; role: string; content: string; createdAt: string }[] }>("/api/chat"),
-        api<{ user: SessionUser }>("/api/me").catch(() => null),
-      ]);
+      const meRes = await api<{ user: SessionUser }>("/api/me").catch(() => null);
       const token = getToken();
       if (token && meRes?.user) {
         saveSession(token, meRes.user);
         syncProfile(meRes.user);
       }
-      await hydrateFromCloud(noteRes.notes || [], chatRes.messages || []);
+      await hydrateFromCloud();
       void resumePendingAnalysis();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -127,12 +125,20 @@ export default function HomePage() {
     setImage("");
     setOpenPlus(false);
     try {
+      const open = await ensureOpenSession(content || (sendingImage ? "（图片）" : ""));
+      const userMessageId = newDiaryId();
       const res = await api<{
         note: { createdAt: string };
-        reply: { content: string; createdAt: string };
+        reply: { content: string; createdAt: string; id: string };
+        messages?: { id: string; createdAt: string }[];
       }>("/api/chat", {
         method: "POST",
-        data: { content, hasImage: Boolean(sendingImage) },
+        data: {
+          content,
+          hasImage: Boolean(sendingImage),
+          sessionId: open.id,
+          clientId: userMessageId,
+        },
       });
       await appendTurn({
         text: content,
@@ -140,6 +146,9 @@ export default function HomePage() {
         reply: res.reply.content,
         createdAt: new Date(res.note.createdAt).getTime() || Date.now(),
         replyAt: new Date(res.reply.createdAt).getTime() || Date.now(),
+        sessionId: open.id,
+        userMessageId,
+        assistantMessageId: res.reply.id,
       });
       syncLocal();
     } catch (err) {

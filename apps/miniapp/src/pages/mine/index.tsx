@@ -190,8 +190,7 @@ export default function MinePage() {
   function onPrivacy() {
     Taro.showModal({
       title: "隐私",
-      content:
-        "陪伴对话会记在账号里。点「就聊到这」收进的情绪日记和深度洞察先存在这台设备上；分析密钥只放在服务器。照片留在本机，发给倾听者的只有「附了一张图」。",
+      content: "陪伴对话、情绪日记和深度洞察都会记在你的账号里。清掉这台设备上的小程序缓存，云端记录还在；重新登录后会再同步下来。分析密钥只放在服务器。照片留在本机，发给倾听者的只有「附了一张图」。",
       showCancel: false,
       confirmText: "知道了",
       confirmColor: "#5f6f52",
@@ -201,7 +200,7 @@ export default function MinePage() {
   function onLogout() {
     Taro.showModal({
       title: "退出",
-      content: "退出后，这台设备上的登录状态会清掉。记录仍留在云端。",
+      content: "退出后，这台设备上的登录状态会清掉。日记和对话仍留在账号云端。",
       confirmText: "退出",
       confirmColor: "#8a4a42",
       success: (res) => {
@@ -263,9 +262,7 @@ export default function MinePage() {
       <Button className="mine__row mine__row--last" onClick={onLogout}>
         退出登录
       </Button>
-      <Text className="mine__foot">
-        昵称与头像可随时改，保存后跟着账号走。点「就聊到这」后，深度洞察会出现在「情绪日记」。清掉小程序数据，本机日记也会一起消失。
-      </Text>
+      <Text className="mine__foot">昵称与头像可随时改，保存后跟着账号走。点「就聊到这」后，深度洞察会出现在「情绪日记」。日记跟账号存在云端；清掉小程序缓存不会删掉已同步的记录。</Text>
     </View>
   );
 }

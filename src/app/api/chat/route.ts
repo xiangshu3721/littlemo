@@ -13,9 +13,11 @@ import { chat as gatewayChat } from "@/lib/ai-gateway";
 import { readBearer, requireUser } from "@/lib/auth";
 import { COMPANION_SYSTEM, ensureCrisisCopy, toGatewayHistory } from "@/lib/companion";
 import { apiJson, preflight, withCors } from "@/lib/cors";
+import { asClientId, ensureOwnedSession } from "@/lib/diary-cloud";
 import { replyTurn } from "@/lib/deepseek";
 import { LIMITS, clipText } from "@/lib/limits";
 import type { ChatLine, GuideContext, MemoryPack } from "@/lib/types";
+import { toDay } from "@/lib/dates";
 
 export const PUT = methodNotAllowed;
 export const DELETE = methodNotAllowed;
@@ -26,10 +28,13 @@ export function OPTIONS(req: Request) {
 
 function messageJson(row: ChatMessage) {
   return {
-    id: row.id,
+    id: row.clientId || row.id,
+    dbId: row.id,
     role: row.role,
     content: row.content,
     model: row.model,
+    sessionId: row.sessionId,
+    clientId: row.clientId,
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -102,6 +107,7 @@ async function companionPost(
     messages?: { role?: string; content?: unknown }[];
     clientId?: unknown;
     hasImage?: unknown;
+    sessionId?: unknown;
   },
 ) {
   const auth = await requireUser(req);
@@ -113,7 +119,18 @@ async function companionPost(
       return apiJson(req, { error: "先写一点，或附一张图。" }, 400);
     }
     const content = spoken || "（图片）";
-    const clientId = clipText(data.clientId, 64).trim() || null;
+    const clientId = asClientId(data.clientId) || null;
+    const sessionId = asClientId(data.sessionId);
+    const now = new Date();
+
+    if (sessionId) {
+      await ensureOwnedSession(auth.user.id, sessionId, {
+        day: toDay(now),
+        title: content.slice(0, 18),
+        lastUserAt: now,
+        startedAt: now,
+      });
+    }
 
     let note: Note;
     if (clientId) {
@@ -134,9 +151,27 @@ async function companionPost(
       });
     }
 
-    const userMessage = await prisma.chatMessage.create({
-      data: { userId: auth.user.id, role: "user", content },
-    });
+    let userMessage: ChatMessage | null = clientId
+      ? await prisma.chatMessage.findUnique({
+          where: { userId_clientId: { userId: auth.user.id, clientId } },
+        })
+      : null;
+    if (userMessage) {
+      userMessage = await prisma.chatMessage.update({
+        where: { id: userMessage.id },
+        data: { content, sessionId: sessionId || userMessage.sessionId },
+      });
+    } else {
+      userMessage = await prisma.chatMessage.create({
+        data: {
+          userId: auth.user.id,
+          role: "user",
+          content,
+          sessionId: sessionId || null,
+          clientId,
+        },
+      });
+    }
 
     const history = await prisma.chatMessage.findMany({
       where: { userId: auth.user.id },
@@ -159,15 +194,20 @@ async function companionPost(
         role: "assistant",
         content: replyText,
         model: result.model,
+        sessionId: sessionId || null,
       },
     });
 
     return apiJson(req, {
       reply: messageJson(assistant),
       note: noteJson(note),
+      sessionId: sessionId || null,
       messages: [messageJson(userMessage), messageJson(assistant)],
     });
   } catch (err) {
+    if (err instanceof Error && err.message === "SESSION_TAKEN") {
+      return apiJson(req, { error: "段落冲突。" }, 409);
+    }
     return apiJson(req, { error: publicError(err, "没接上") }, 500);
   }
 }
@@ -212,6 +252,7 @@ export async function POST(req: Request) {
       content?: string;
       messages?: { role?: string; content?: unknown }[];
       clientId?: string;
+      sessionId?: string;
     }>(req, LIMITS.jsonBodyChat);
     if (!parsed.ok) {
       return authed ? withCors(req, parsed.response) : parsed.response;

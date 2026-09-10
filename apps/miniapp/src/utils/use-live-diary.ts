@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDidShow } from "@tarojs/taro";
-import { api, ApiError } from "./api";
+import { ApiError } from "./api";
 import { hydrateFromCloud, liveMessages, liveSessions, resumePendingAnalysis } from "./diary-store";
 import type { Session } from "./diary-types";
 import { isLoggedIn } from "./session";
@@ -17,19 +17,11 @@ export function useLiveDiary() {
   }
 
   async function load() {
+    // 缓存先出来，再从云端拉账号日记
     refresh();
     if (!isLoggedIn()) return;
     try {
-      const [noteRes, chatRes] = await Promise.all([
-        api<{ notes: { id: string; content: string; createdAt: string }[] }>("/api/notes", {
-          timeout: 8_000,
-        }),
-        api<{ messages: { id: string; role: string; content: string; createdAt: string }[] }>(
-          "/api/chat",
-          { timeout: 8_000 },
-        ),
-      ]);
-      await hydrateFromCloud(noteRes.notes || [], chatRes.messages || []);
+      await hydrateFromCloud();
       void resumePendingAnalysis();
       refresh();
     } catch (err) {
