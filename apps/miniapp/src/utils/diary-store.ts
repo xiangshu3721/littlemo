@@ -6,7 +6,6 @@ import type {
   Analysis,
   DiaryBundle,
   Message,
-  PatternSummary,
   PeriodKind,
   PeriodPayloadEntry,
   PeriodReport,
@@ -15,10 +14,6 @@ import type {
 import { getToken, getUser } from "./session";
 
 const EMPTY: DiaryBundle = { sessions: [], messages: [], reports: [] };
-
-/** Soft offer after this many real user turns; also auto on episode close. */
-export const PATTERN_SUMMARY_DEPTH_TURNS = 4;
-
 
 function storageKey(userId: string) {
   return `littlemo.diary.${userId}`;
@@ -116,10 +111,6 @@ function toCloudSession(session: Session) {
     coreNeeds: session.coreNeeds ?? [],
     coreTheme: session.coreTheme ?? null,
     lastUserAt: session.lastUserAt ?? null,
-    patternSummary: session.patternSummary ?? null,
-    patternSummaryStatus: session.patternSummaryStatus ?? "idle",
-    patternSummaryError: session.patternSummaryError ?? null,
-    patternSummaryAt: session.patternSummaryAt ?? null,
   };
 }
 
@@ -178,8 +169,6 @@ function fromCloudSession(row: CloudSession): Session {
     deletedAt: row.deletedAt ? Number(row.deletedAt) : undefined,
     lastUserAt: row.lastUserAt ? Number(row.lastUserAt) : undefined,
     analysisStatus: row.analysisStatus || "idle",
-    patternSummaryStatus: row.patternSummaryStatus || "idle",
-    patternSummaryAt: row.patternSummaryAt ? Number(row.patternSummaryAt) : undefined,
     title: row.title || "还在聊的一段",
   };
 }
@@ -197,10 +186,8 @@ function sessionNeedsUpload(local: Session, cloud?: Session) {
   if ((local.deletedAt || 0) > (cloud.deletedAt || 0)) return true;
   if ((local.endedAt || 0) > (cloud.endedAt || 0)) return true;
   if (local.analysisStatus === "done" && cloud.analysisStatus !== "done") return true;
-  if (local.patternSummaryStatus === "done" && cloud.patternSummaryStatus !== "done") return true;
   if ((local.lastUserAt || 0) > (cloud.lastUserAt || 0)) return true;
   if (local.analysis && !cloud.analysis) return true;
-  if (local.patternSummary && !cloud.patternSummary) return true;
   return false;
 }
 
@@ -262,19 +249,6 @@ function userLines(sessionId: string, bundle = loadDiary()) {
   return bundle.messages
     .filter((m) => m.sessionId === sessionId && isUserTurn(m))
     .sort((a, b) => a.createdAt - b.createdAt);
-}
-
-
-export function countUserTurns(sessionId: string, bundle = loadDiary()) {
-  return userLines(sessionId, bundle).filter((m) => !wantsCloseEpisode(m.text)).length;
-}
-
-export function isPatternSummaryDepthReached(sessionId: string, bundle = loadDiary()) {
-  return countUserTurns(sessionId, bundle) >= PATTERN_SUMMARY_DEPTH_TURNS;
-}
-
-export function hasPatternSummary(session?: Session | null) {
-  return Boolean(session?.patternSummary && session.patternSummaryStatus === "done");
 }
 
 export function openTalkSession(bundle = loadDiary()) {
@@ -414,80 +388,10 @@ export async function closeSession(session: Session, status: Session["status"] =
     endedAt: latest.endedAt || Date.now(),
     status,
     analysisStatus: latest.analysisStatus === "done" ? "done" : "pending",
-    patternSummaryStatus:
-      latest.patternSummaryStatus === "done"
-        ? "done"
-        : countUserTurns(latest.id)
-          ? "pending"
-          : latest.patternSummaryStatus || "idle",
     day: userLines(latest.id).at(-1)?.day || latest.day,
   };
   await persistSession(closed);
   void analyzeSession(latest.id);
-  void ensurePatternSummaryOnClose(latest.id);
-}
-
-
-export async function requestPatternSummary(sessionId: string, opts: { force?: boolean } = {}) {
-  const bundle = loadDiary();
-  const session = bundle.sessions.find((s) => s.id === sessionId);
-  if (!session) return null;
-  if (!opts.force && hasPatternSummary(session)) return session.patternSummary || null;
-  if (!opts.force && session.patternSummaryStatus === "pending") return null;
-
-  const lines = bundle.messages
-    .filter((m) => m.sessionId === sessionId && !m.pending && (m.text.trim() || m.image))
-    .map((m) => ({
-      role: m.role,
-      text: clipText(m.text || (m.image ? "（图片）" : ""), DIARY_LIMITS.lineChars),
-      time: formatClock(m.createdAt),
-    }))
-    .slice(-DIARY_LIMITS.analyzeLines);
-  if (!lines.some((l) => l.role === "user")) return null;
-
-  await persistSession({
-    ...session,
-    patternSummaryStatus: "pending",
-    patternSummaryError: undefined,
-  });
-  try {
-    const data = await api<{ summary?: PatternSummary; error?: string }>("/api/summary", {
-      method: "POST",
-      data: { lines, sessionId, analysis: session.analysis || null },
-      timeout: 90_000,
-    });
-    const latest = loadDiary().sessions.find((s) => s.id === sessionId);
-    if (!latest || !data.summary) return null;
-    const summary: PatternSummary = {
-      ...data.summary,
-      generatedAt: data.summary.generatedAt || Date.now(),
-    };
-    await persistSession({
-      ...latest,
-      patternSummary: summary,
-      patternSummaryStatus: "done",
-      patternSummaryError: undefined,
-      patternSummaryAt: summary.generatedAt,
-    });
-    return summary;
-  } catch (err) {
-    const latest = loadDiary().sessions.find((s) => s.id === sessionId);
-    if (!latest) return null;
-    await persistSession({
-      ...latest,
-      patternSummaryStatus: "error",
-      patternSummaryError: err instanceof Error ? err.message : "小结没写出来",
-    });
-    return null;
-  }
-}
-
-export async function ensurePatternSummaryOnClose(sessionId: string) {
-  const latest = loadDiary().sessions.find((s) => s.id === sessionId);
-  if (!latest || latest.deletedAt) return;
-  if (hasPatternSummary(latest)) return latest.patternSummary || null;
-  if (!countUserTurns(sessionId)) return null;
-  return requestPatternSummary(sessionId);
 }
 
 export async function requestInsight() {
@@ -693,13 +597,6 @@ export async function resumePendingAnalysis() {
   for (const row of bundle.sessions) {
     if (row.endedAt && !row.deletedAt && row.analysisStatus === "pending") {
       void analyzeSession(row.id);
-    }
-    if (
-      !row.deletedAt &&
-      row.patternSummaryStatus === "pending" &&
-      countUserTurns(row.id)
-    ) {
-      void requestPatternSummary(row.id);
     }
   }
 }

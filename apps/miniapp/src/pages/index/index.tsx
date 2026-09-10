@@ -12,15 +12,12 @@ import { isArchiveMark } from "../../utils/diary-moods";
 import {
   appendTurn,
   ensureOpenSession,
-  hasPatternSummary,
   hydrateFromCloud,
-  isPatternSummaryDepthReached,
   liveMessages,
   liveSessions,
   newDiaryId,
   openTalkSession,
   requestInsight,
-  requestPatternSummary,
   resumePendingAnalysis,
 } from "../../utils/diary-store";
 import type { Message } from "../../utils/diary-types";
@@ -45,9 +42,6 @@ export default function HomePage() {
   const [pending, setPending] = useState(false);
   const [closing, setClosing] = useState(false);
   const [canInsight, setCanInsight] = useState(false);
-  const [offerSummary, setOfferSummary] = useState(false);
-  const [openSessionId, setOpenSessionId] = useState("");
-  const [summarizing, setSummarizing] = useState(false);
   const [ready, setReady] = useState(false);
   const [openPlus, setOpenPlus] = useState(false);
   const [nickname, setNickname] = useState(displayName(getUser()));
@@ -84,17 +78,7 @@ export default function HomePage() {
     for (const session of sessions) map[session.id] = Boolean(session.endedAt);
     setEndedById(map);
     setThread(liveMessages());
-    const talk = openTalkSession();
-    setCanInsight(Boolean(talk));
-    setOpenSessionId(talk?.id || "");
-    setOfferSummary(
-      Boolean(
-        talk &&
-          isPatternSummaryDepthReached(talk.id) &&
-          !hasPatternSummary(talk) &&
-          talk.patternSummaryStatus !== "pending",
-      ),
-    );
+    setCanInsight(Boolean(openTalkSession()));
   }
 
   async function load() {
@@ -155,7 +139,6 @@ export default function HomePage() {
           sessionId: open.id,
           clientId: userMessageId,
         },
-        timeout: 25_000,
       });
       await appendTurn({
         text: content,
@@ -188,14 +171,10 @@ export default function HomePage() {
 
   async function closeAndInsight() {
     if (!canInsight || closing || busy) return;
-    const sid = openSessionId || openTalkSession()?.id || "";
     setClosing(true);
     try {
       await requestInsight();
       syncLocal();
-      if (sid) {
-        Taro.navigateTo({ url: `/pages/summary/index?sessionId=${encodeURIComponent(sid)}` });
-      }
     } catch (err) {
       Taro.showToast({
         title: err instanceof Error ? err.message : "没收进去",
@@ -203,24 +182,6 @@ export default function HomePage() {
       });
     } finally {
       setClosing(false);
-    }
-  }
-
-  async function makePatternSummary() {
-    const sid = openSessionId || openTalkSession()?.id || "";
-    if (!sid || summarizing || busy || closing) return;
-    setSummarizing(true);
-    try {
-      await requestPatternSummary(sid);
-      syncLocal();
-      Taro.navigateTo({ url: `/pages/summary/index?sessionId=${encodeURIComponent(sid)}` });
-    } catch (err) {
-      Taro.showToast({
-        title: err instanceof Error ? err.message : "小结没写出来",
-        icon: "none",
-      });
-    } finally {
-      setSummarizing(false);
     }
   }
 
@@ -338,15 +299,6 @@ export default function HomePage() {
         )}
       </ScrollView>
       <View className="home__composer">
-        {offerSummary ? (
-          <Button
-            className="home__summary"
-            disabled={summarizing || busy || closing}
-            onClick={() => void makePatternSummary()}
-          >
-            {summarizing ? "正在写这一页…" : "生成一页情绪模式小结"}
-          </Button>
-        ) : null}
         {canInsight ? (
           <Button
             className="home__close"

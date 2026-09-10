@@ -1,8 +1,7 @@
 import { View, Text, Button } from "@tarojs/components";
-import Taro from "@tarojs/taro";
 import { formatClock } from "../../utils/diary-dates";
 import { asMe, episodeHeadline, weatherMark } from "../../utils/diary-moods";
-import { hasPatternSummary, liveMessages, retryAnalysis, trashSession } from "../../utils/diary-store";
+import { liveMessages, retryAnalysis, trashSession } from "../../utils/diary-store";
 import type { Session } from "../../utils/diary-types";
 import { useState } from "react";
 
@@ -108,50 +107,6 @@ export function SessionDigest({
               </Button>
             </View>
           ) : null}
-        </View>
-      ) : null}
-
-      {!openChat ? (
-        <View className="sheet__block">
-          {hasPatternSummary(session) ? (
-            <Button
-              className="sheet__action"
-              onClick={() =>
-                Taro.navigateTo({
-                  url: `/pages/summary/index?sessionId=${encodeURIComponent(session.id)}`,
-                })
-              }
-            >
-              看一页情绪模式小结
-            </Button>
-          ) : session.patternSummaryStatus === "pending" ? (
-            <Text className="sheet__hint">正在写一页情绪模式小结…</Text>
-          ) : session.patternSummaryStatus === "error" ? (
-            <View>
-              <Text className="sheet__hint">{session.patternSummaryError || "小结没写出来"}</Text>
-              <Button
-                className="sheet__action"
-                onClick={() =>
-                  Taro.navigateTo({
-                    url: `/pages/summary/index?sessionId=${encodeURIComponent(session.id)}`,
-                  })
-                }
-              >
-                再写一页情绪模式小结
-              </Button>
-            </View>
-          ) : (
-            <Button
-              className="sheet__action"
-              onClick={() =>
-                Taro.navigateTo({
-                  url: `/pages/summary/index?sessionId=${encodeURIComponent(session.id)}`,
-                })
-              }
-            >
-              生成一页情绪模式小结
-            </Button>
-          )}
         </View>
       ) : null}
 

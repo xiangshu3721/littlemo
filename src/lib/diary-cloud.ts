@@ -2,12 +2,11 @@ import { prisma, type ChatMessage, type DiarySession, type PeriodReport, type Pr
 import { asPeriodKind } from "@/lib/api-guard";
 import { toDay } from "@/lib/dates";
 import { LIMITS, clipStringList, clipText } from "@/lib/limits";
-import type { Analysis, AnalysisStatus, EpisodeStatus, MoodId, PatternSummary, PatternSummaryStatus, PeriodKind } from "@/lib/types";
+import type { Analysis, AnalysisStatus, EpisodeStatus, MoodId, PeriodKind } from "@/lib/types";
 
 const MOODS: MoodId[] = ["happy", "calm", "sad", "angry", "anxious", "tired"];
 const ANALYSIS_STATUS: AnalysisStatus[] = ["idle", "pending", "done", "error"];
 const EPISODE_STATUS: EpisodeStatus[] = ["active", "pending", "paused", "completed", "reopened"];
-const PATTERN_SUMMARY_STATUS: PatternSummaryStatus[] = ["idle", "pending", "done", "error"];
 
 export type DiarySessionInput = {
   id?: unknown;
@@ -29,10 +28,6 @@ export type DiarySessionInput = {
   coreNeeds?: unknown;
   coreTheme?: unknown;
   lastUserAt?: unknown;
-  patternSummary?: unknown;
-  patternSummaryStatus?: unknown;
-  patternSummaryError?: unknown;
-  patternSummaryAt?: unknown;
 };
 
 export type DiaryMessageInput = {
@@ -117,37 +112,6 @@ function asEpisodeStatus(value: unknown): EpisodeStatus {
   return EPISODE_STATUS.includes(status as EpisodeStatus) ? (status as EpisodeStatus) : "active";
 }
 
-
-function asPatternSummaryStatus(value: unknown): PatternSummaryStatus {
-  const status = clipText(value, 16).trim();
-  return PATTERN_SUMMARY_STATUS.includes(status as PatternSummaryStatus)
-    ? (status as PatternSummaryStatus)
-    : "idle";
-}
-
-function clipPatternSummary(input: unknown): PatternSummary | null {
-  if (!input || typeof input !== "object") return null;
-  const row = input as Record<string, unknown>;
-  const threads = clipStringList(row.threads, 4, 80);
-  const headline = clipText(row.headline, 24).trim();
-  const narrative = clipText(row.narrative, 800).trim();
-  const takeaway = clipText(row.takeaway, 160).trim();
-  if (!headline && !narrative && !takeaway && !threads.length) return null;
-  const generatedAt =
-    typeof row.generatedAt === "number" && Number.isFinite(row.generatedAt)
-      ? row.generatedAt
-      : undefined;
-  return {
-    headline: headline || "这一段的情绪模式",
-    narrative: narrative || "这一段里我说了一些心里的事。先收下，不必立刻定论。",
-    threads: threads.length
-      ? threads
-      : ["我好像在同一类感受里绕了一圈"],
-    takeaway: takeaway || "先看见这一段就好，不急着修好自己。",
-    generatedAt,
-  };
-}
-
 function clipAnalysis(input: unknown): Analysis | null {
   if (!input || typeof input !== "object") return null;
   const row = input as Record<string, unknown>;
@@ -207,10 +171,6 @@ export function sessionJson(row: DiarySession) {
     coreNeeds: Array.isArray(row.coreNeeds) ? (row.coreNeeds as string[]) : undefined,
     coreTheme: row.coreTheme || undefined,
     lastUserAt: row.lastUserAt ? row.lastUserAt.getTime() : undefined,
-    patternSummary: (row.patternSummary as PatternSummary | null) || undefined,
-    patternSummaryStatus: asPatternSummaryStatus(row.patternSummaryStatus),
-    patternSummaryError: row.patternSummaryError || undefined,
-    patternSummaryAt: row.patternSummaryAt ? row.patternSummaryAt.getTime() : undefined,
   };
 }
 
@@ -332,42 +292,6 @@ export async function saveSessionAnalysis(
   });
 }
 
-
-export async function savePatternSummary(
-  userId: string,
-  sessionId: string,
-  summary: PatternSummary,
-) {
-  const owned = await ensureOwnedSession(userId, sessionId);
-  if (!owned) return null;
-  return prisma.diarySession.update({
-    where: { id: owned.id },
-    data: {
-      patternSummary: jsonValue(summary) ?? undefined,
-      patternSummaryStatus: "done",
-      patternSummaryError: null,
-      patternSummaryAt: new Date(summary.generatedAt || Date.now()),
-    },
-  });
-}
-
-export async function savePatternSummaryStatus(
-  userId: string,
-  sessionId: string,
-  data: { patternSummaryStatus?: PatternSummaryStatus; patternSummaryError?: string | null },
-) {
-  const owned = await ensureOwnedSession(userId, sessionId);
-  if (!owned) return null;
-  return prisma.diarySession.update({
-    where: { id: owned.id },
-    data: {
-      patternSummaryStatus: data.patternSummaryStatus || owned.patternSummaryStatus,
-      patternSummaryError:
-        data.patternSummaryError === undefined ? owned.patternSummaryError : data.patternSummaryError,
-    },
-  });
-}
-
 export async function saveSessionStatus(
   userId: string,
   sessionId: string,
@@ -466,10 +390,6 @@ export async function upsertDiarySession(userId: string, input: DiarySessionInpu
     coreNeeds: jsonValue(clipStringList(input.coreNeeds, 8, 40)),
     coreTheme: clipText(input.coreTheme, 120).trim() || null,
     lastUserAt: asDate(input.lastUserAt) || null,
-    patternSummary: jsonValue(clipPatternSummary(input.patternSummary)) ?? undefined,
-    patternSummaryStatus: asPatternSummaryStatus(input.patternSummaryStatus),
-    patternSummaryError: clipText(input.patternSummaryError, 80).trim() || null,
-    patternSummaryAt: asDate(input.patternSummaryAt) || null,
   };
   const row = existing
     ? await prisma.diarySession.update({

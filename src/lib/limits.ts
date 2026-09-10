@@ -24,8 +24,6 @@ export const LIMITS = {
   jsonBodyDiary: 400_000,
   rateChatPerMin: 24,
   rateAnalyzePerMin: 8,
-  rateSummaryPerMin: 8,
-  rateContactPerMin: 30,
   ratePeriodPerMin: 6,
   rateAuthPerMin: 20,
   rateNotesPerMin: 40,

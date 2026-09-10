@@ -11,7 +11,6 @@ import type {
   GuideTurn,
   MemoryPack,
   MoodId,
-  PatternSummary,
   PeriodKind,
   PeriodPayloadEntry,
   PeriodReport,
@@ -51,7 +50,6 @@ async function chatJson(
       temperature,
       response_format: { type: "json_object" },
     }),
-    signal: AbortSignal.timeout(22_000),
   });
   if (!res.ok) {
     try {
@@ -480,71 +478,5 @@ ${
     unseen,
     growth,
     growthNote: String(data.growthNote || "").trim() || undefined,
-  };
-}
-
-
-export async function composePatternSummary(
-  lines: TranscriptLine[],
-  analysis?: Analysis | null,
-): Promise<PatternSummary> {
-  const analysisHint = analysis
-    ? `已有的深度洞察（可参考，不要复述成诊断报告）：
-标题：${clipText(analysis.title, 24) || "无"}
-情绪：${(analysis.emotions || []).join("、") || "无"}
-事实：${clipText(analysis.facts, 240) || "无"}
-需要：${clipText(analysis.needs, 160) || "无"}
-模式：${clipText(analysis.pattern, 200) || "无"}
-对待自己：${clipText(analysis.treatSelf, 160) || "无"}`
-    : "（还没有深度洞察，请只根据对话整理）";
-
-  const data = await chatJson(
-    [
-      {
-        role: "system",
-        content: `你在和「我」一起写一页「情绪模式小结」。语气像并肩坐下来轻轻整理，不是教练点评，也不是临床诊断。
-
-用第一人称「我」。禁止：用户/他/她/TA；诊断标签；治疗承诺；营销腔；恐吓式危机话术。
-
-只输出 JSON：
-{
-  "headline": "不超过12字，像一页手账标题",
-  "narrative": "一段连贯的小结正文，120-220字，像我们一起看清这一段：发生了什么、我心里绕着什么、我真正想要什么。可留一点不确定。",
-  "threads": ["2-4条短线，每条一句，点出反复出现的软模式，不要病理化"],
-  "takeaway": "一句安静收束，像我带走的一句话，不要口号"
-}`,
-      },
-      {
-        role: "user",
-        content: `${analysisHint}
-
-${wrapUntrusted(
-          "本段记录",
-          lines
-            .slice(-LIMITS.analyzeLines)
-            .map(
-              (line) =>
-                `${line.time} ${line.role === "user" ? "我" : "听"}：${clipText(line.text, LIMITS.lineChars)}`,
-            )
-            .join("\n"),
-        )}`,
-      },
-    ],
-    0.4,
-  );
-
-  const threads = asStringList(data.threads).slice(0, 4);
-  return {
-    headline: String(data.headline || "").trim().slice(0, 16) || "这一段的情绪模式",
-    narrative:
-      String(data.narrative || "").trim() ||
-      "这一段里我说了一些心里的事。先收下，不必立刻定论。",
-    threads: threads.length
-      ? threads
-      : ["我好像在同一类感受里绕了一圈", "我真正想要的，也许比表面说的更轻也更真"],
-    takeaway:
-      String(data.takeaway || "").trim() ||
-      "先看见这一段就好，不急着修好自己。",
-    generatedAt: Date.now(),
   };
 }

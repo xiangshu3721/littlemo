@@ -1,6 +1,6 @@
 # 有点情绪
 
-记下这一刻的情绪。网页版像聊天一样记下这一刻，记录默认存在这台设备的浏览器里。微信小程序把陪伴对话、情绪日记和阶段洞察放到云端（PostgreSQL）：点「就聊到这」后走 `/api/analyze`，并自动生成一页「情绪模式小结」（`/api/summary`，页脚软 CTA 走 `/api/contact`），日历和阶段规律走 `/api/period`，段落元数据走 `/api/diary`。AI 走 DeepSeek，密钥只放在服务器。
+记下这一刻的情绪。网页版像聊天一样记下这一刻，记录默认存在这台设备的浏览器里。微信小程序把陪伴对话、情绪日记和阶段洞察放到云端（PostgreSQL）：点「就聊到这」后走 `/api/analyze`，日历和阶段规律走 `/api/period`，段落元数据走 `/api/diary`。AI 走 DeepSeek，密钥只放在服务器。
 
 **小程序范围：陪伴聊天 + 情绪日记（日历、深度洞察、周/月/90天规律）。** 网页版另有个人资料、设置和回收站页。
 
@@ -48,7 +48,6 @@ cp .env.example .env
 | `WECHAT_APPID` / `WECHAT_SECRET` | 小程序 jscode2session |
 | `JWT_SECRET` | 登录 JWT。生产必填 |
 | `WECHAT_MOCK` | `1` 时不调微信，任意非空 `code` 会创建/复用用户 |
-| `NEXT_PUBLIC_CONTACT_WECHAT_ID` / `CONTACT_WECHAT_ID` / `CONTACT_WECHAT_QR_URL` | 小结页脚加微信；空则显示「联系方式待配置」 |
 | `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | 服务端模型。小程序代码里不得出现 |
 | `CORS_ORIGINS` | 可选。Taro H5 跨域白名单 |
 
