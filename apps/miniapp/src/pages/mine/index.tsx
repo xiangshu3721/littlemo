@@ -2,20 +2,29 @@ import { View, Text, Button, Image } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
 import { useMemo, useState } from "react";
 import { api, ApiError } from "../../utils/api";
-import { avatarSrcForDisplay, imagePathToAvatarDataUrl, shouldUseChooseAvatar } from "../../utils/avatar";
+import {
+  avatarSrcForDisplay,
+  displayName,
+  imagePathToAvatarDataUrl,
+  readLocalProfile,
+  shouldUseChooseAvatar,
+  writeLocalProfile,
+} from "../../utils/avatar";
 import { clearSession, getUser, isLoggedIn, saveUser, type SessionUser } from "../../utils/session";
+import { usePageTheme } from "../../utils/theme";
 import "./index.scss";
 
 export default function MinePage() {
-  const [name, setName] = useState("未登录");
+  const theme = usePageTheme();
+  const [name, setName] = useState(displayName(getUser()));
   const [avatarSrc, setAvatarSrc] = useState("");
   const [avatarKey, setAvatarKey] = useState(0);
   const [busy, setBusy] = useState(false);
   const nativeAvatar = useMemo(() => shouldUseChooseAvatar(), []);
 
   function showUser(user: SessionUser | null) {
-    setName(user?.nickname || "有点情绪");
-    const url = user?.avatar || "";
+    setName(displayName(user));
+    const url = user?.avatar || readLocalProfile().avatarDataUrl || "";
     setAvatarSrc(url ? avatarSrcForDisplay(url) : "");
   }
 
@@ -28,12 +37,19 @@ export default function MinePage() {
         avatar: data.user.avatar || local?.avatar || null,
       };
       saveUser(merged);
+      if (merged.avatar && isDataUrl(merged.avatar)) {
+        writeLocalProfile({ ...readLocalProfile(), avatarDataUrl: merged.avatar });
+      }
       showUser(merged);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         Taro.redirectTo({ url: "/pages/login/index" });
       }
     }
+  }
+
+  function isDataUrl(value: string) {
+    return value.startsWith("data:image/");
   }
 
   useDidShow(() => {
@@ -52,6 +68,7 @@ export default function MinePage() {
       const dataUrl = await imagePathToAvatarDataUrl(filePath);
       const current = getUser();
       if (current) saveUser({ ...current, avatar: dataUrl });
+      writeLocalProfile({ ...readLocalProfile(), avatarDataUrl: dataUrl });
       showUser({ ...(current || { id: "", nickname: name, avatar: dataUrl }), avatar: dataUrl });
       setAvatarKey((n) => n + 1);
       const data = await api<{ user: SessionUser }>("/api/me", {
@@ -59,6 +76,9 @@ export default function MinePage() {
         data: { avatar: dataUrl },
       });
       saveUser(data.user);
+      if (data.user.avatar && isDataUrl(data.user.avatar)) {
+        writeLocalProfile({ ...readLocalProfile(), avatarDataUrl: data.user.avatar });
+      }
       showUser(data.user);
       setAvatarKey((n) => n + 1);
     } catch (err) {
@@ -92,7 +112,8 @@ export default function MinePage() {
   function onPrivacy() {
     Taro.showModal({
       title: "隐私",
-      content: "陪伴对话会记在账号里。点「就聊到这」收进的情绪日记和深度洞察先存在这台设备上；分析密钥只放在服务器。",
+      content:
+        "陪伴对话会记在账号里。点「就聊到这」收进的情绪日记和深度洞察先存在这台设备上；分析密钥只放在服务器。照片留在本机，发给倾听者的只有「附了一张图」。",
       showCancel: false,
       confirmText: "知道了",
       confirmColor: "#5f6f52",
@@ -114,7 +135,7 @@ export default function MinePage() {
   }
 
   return (
-    <View className="mine">
+    <View className={`mine ${theme.className}`}>
       <Text className="mine__mark">只陪这一刻</Text>
       <View className="mine__card">
         <Button
@@ -137,6 +158,7 @@ export default function MinePage() {
           <Text className="mine__avatar-hint">{busy ? "在换…" : "点按更换"}</Text>
         </Button>
         <Text className="mine__name">{name}</Text>
+        <Text className="mine__hint">点头像可更换，会保存到账号。</Text>
       </View>
       <Button className="mine__row" onClick={onPrivacy}>
         隐私说明
@@ -144,7 +166,9 @@ export default function MinePage() {
       <Button className="mine__row mine__row--last" onClick={onLogout}>
         退出登录
       </Button>
-      <Text className="mine__foot">点「就聊到这」后，深度洞察会出现在「情绪日记」。清掉小程序数据，本机日记也会一起消失。</Text>
+      <Text className="mine__foot">
+        点「就聊到这」后，深度洞察会出现在「情绪日记」。清掉小程序数据，本机日记也会一起消失。
+      </Text>
     </View>
   );
 }

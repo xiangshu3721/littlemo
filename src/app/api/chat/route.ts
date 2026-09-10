@@ -101,13 +101,18 @@ async function companionPost(
     content?: unknown;
     messages?: { role?: string; content?: unknown }[];
     clientId?: unknown;
+    hasImage?: unknown;
   },
 ) {
   const auth = await requireUser(req);
   if (!auth.ok) return auth.response;
   try {
-    const content = latestFromMini(data);
-    if (!content) return apiJson(req, { error: "先写一点。" }, 400);
+    const spoken = latestFromMini(data);
+    const hasImage = Boolean(data.hasImage);
+    if (!spoken && !hasImage) {
+      return apiJson(req, { error: "先写一点，或附一张图。" }, 400);
+    }
+    const content = spoken || "（图片）";
     const clientId = clipText(data.clientId, 64).trim() || null;
 
     let note: Note;
@@ -143,11 +148,11 @@ async function companionPost(
       temperature: 0.55,
       messages: [
         { role: "system", content: COMPANION_SYSTEM },
-        ...toGatewayHistory(history, content),
+        ...toGatewayHistory(history, content, { hasImage }),
       ],
     });
 
-    const replyText = ensureCrisisCopy(content, result.content);
+    const replyText = ensureCrisisCopy(spoken, result.content);
     const assistant = await prisma.chatMessage.create({
       data: {
         userId: auth.user.id,

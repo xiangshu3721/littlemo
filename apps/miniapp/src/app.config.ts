@@ -1,11 +1,22 @@
 export default defineAppConfig({
-  pages: ["pages/index/index", "pages/diary/index", "pages/mine/index", "pages/login/index"],
+  pages: [
+    "pages/index/index",
+    "pages/diary/index",
+    "pages/insight/index",
+    "pages/mine/index",
+    "pages/login/index",
+  ],
   window: {
     backgroundTextStyle: "light",
     navigationBarBackgroundColor: "#f7f7f7",
     navigationBarTitleText: "有点情绪",
     navigationBarTextStyle: "black",
     backgroundColor: "#e8e8e6",
+  },
+  permission: {
+    "scope.camera": {
+      desc: "用来拍一张此刻的照片，放进对话或换成头像。",
+    },
   },
   tabBar: {
     color: "#999999",
@@ -24,6 +35,12 @@ export default defineAppConfig({
         text: "情绪日记",
         iconPath: "assets/tab/diary.png",
         selectedIconPath: "assets/tab/diary-active.png",
+      },
+      {
+        pagePath: "pages/insight/index",
+        text: "情绪洞察",
+        iconPath: "assets/tab/insight.png",
+        selectedIconPath: "assets/tab/insight-active.png",
       },
       {
         pagePath: "pages/mine/index",

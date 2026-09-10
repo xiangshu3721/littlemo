@@ -109,9 +109,13 @@ export async function trashSession(sessionId: string) {
   await persistSession({ ...cur, deletedAt: Date.now(), endedAt: cur.endedAt || Date.now() });
 }
 
+function isUserTurn(message: Message) {
+  return message.role === "user" && Boolean(message.text.trim() || message.image);
+}
+
 function userLines(sessionId: string, bundle = loadDiary()) {
   return bundle.messages
-    .filter((m) => m.sessionId === sessionId && m.role === "user" && m.text.trim())
+    .filter((m) => m.sessionId === sessionId && isUserTurn(m))
     .sort((a, b) => a.createdAt - b.createdAt);
 }
 
@@ -157,11 +161,18 @@ export async function ensureOpenSession(title: string, at = Date.now()) {
   return open;
 }
 
-export async function appendTurn(input: { text: string; reply?: string; createdAt?: number; replyAt?: number }) {
+export async function appendTurn(input: {
+  text: string;
+  image?: string;
+  reply?: string;
+  createdAt?: number;
+  replyAt?: number;
+}) {
   const at = input.createdAt || Date.now();
   const day = toDay(new Date(at));
   const closeText = input.text.trim();
-  const open = await ensureOpenSession(closeText, at);
+  const title = closeText || (input.image ? "（图片）" : "");
+  const open = await ensureOpenSession(title, at);
   const userMsg: Message = {
     id: nid(),
     sessionId: open.id,
@@ -169,9 +180,10 @@ export async function appendTurn(input: { text: string; reply?: string; createdA
     createdAt: at,
     day,
     text: clipText(closeText, DIARY_LIMITS.latestChars).trim(),
+    image: input.image,
   };
   await persistMessage(userMsg);
-  await persistSession({ ...open, lastUserAt: at, day, title: open.title || closeText.slice(0, 18) });
+  await persistSession({ ...open, lastUserAt: at, day, title: open.title || title.slice(0, 18) });
   if (input.reply) {
     await persistMessage({
       id: nid(),
@@ -194,10 +206,10 @@ export async function analyzeSession(sessionId: string) {
   const session = bundle.sessions.find((s) => s.id === sessionId);
   if (!session) return;
   const lines = bundle.messages
-    .filter((m) => m.sessionId === sessionId && !m.pending && m.text.trim())
+    .filter((m) => m.sessionId === sessionId && !m.pending && (m.text.trim() || m.image))
     .map((m) => ({
       role: m.role,
-      text: clipText(m.text, DIARY_LIMITS.lineChars),
+      text: clipText(m.text || (m.image ? "（图片）" : ""), DIARY_LIMITS.lineChars),
       time: formatClock(m.createdAt),
     }))
     .slice(-DIARY_LIMITS.analyzeLines);
