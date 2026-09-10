@@ -1,6 +1,8 @@
 import { clipTranscript, methodNotAllowed, publicError, rateLimit, readJsonBody } from "@/lib/api-guard";
+import { readBearer, requireUser } from "@/lib/auth";
 import { apiJson, preflight, withCors } from "@/lib/cors";
 import { analyzeSession } from "@/lib/deepseek";
+import { asClientId, saveSessionAnalysis, saveSessionStatus } from "@/lib/diary-cloud";
 import { LIMITS } from "@/lib/limits";
 import type { TranscriptLine } from "@/lib/types";
 
@@ -15,16 +17,50 @@ export function OPTIONS(req: Request) {
 export async function POST(req: Request) {
   const limited = rateLimit(req, LIMITS.rateAnalyzePerMin);
   if (limited) return withCors(req, limited);
+  const authed = Boolean(readBearer(req));
   try {
-    const parsed = await readJsonBody<{ lines?: TranscriptLine[] }>(req, LIMITS.jsonBodyAnalyze);
+    const parsed = await readJsonBody<{ lines?: TranscriptLine[]; sessionId?: string }>(
+      req,
+      LIMITS.jsonBodyAnalyze,
+    );
     if (!parsed.ok) return withCors(req, parsed.response);
     const lines = clipTranscript(parsed.data.lines);
     if (!lines.length) {
       return apiJson(req, { error: "这一段还没有可分析的话。" }, 400);
     }
-    const analysis = await analyzeSession(lines);
-    return apiJson(req, { analysis });
+
+    let userId: string | null = null;
+    const sessionId = asClientId(parsed.data.sessionId);
+    if (authed) {
+      const auth = await requireUser(req);
+      if (!auth.ok) return auth.response;
+      userId = auth.user.id;
+      if (sessionId) {
+        await saveSessionStatus(userId, sessionId, { analysisStatus: "pending", analysisError: null });
+      }
+    }
+
+    try {
+      const analysis = await analyzeSession(lines);
+      if (userId && sessionId) {
+        await saveSessionAnalysis(userId, sessionId, analysis, {
+          title: analysis.title,
+          mood: analysis.suggestedMood,
+          status: "done",
+        });
+      }
+      return apiJson(req, { analysis });
+    } catch (err) {
+      if (userId && sessionId) {
+        await saveSessionStatus(userId, sessionId, {
+          analysisStatus: "error",
+          analysisError: publicError(err, "分析失败"),
+        });
+      }
+      throw err;
+    }
   } catch (err) {
-    return apiJson(req, { error: publicError(err, "分析失败") }, 500);
+    const res = apiJson(req, { error: publicError(err, "分析失败") }, 500);
+    return res;
   }
 }

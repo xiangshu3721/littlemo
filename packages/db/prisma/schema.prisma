@@ -1,6 +1,6 @@
 // 有点情绪 cloud models (PostgreSQL).
-// Mini-program V1 uses User / Note / ChatMessage only.
-// Web insight/analyze/period stay local (IndexedDB) and are not stored here.
+// Mini-program diary / period insight persist here for logged-in users.
+// Web IndexedDB remains local-first and does not write these tables.
 
 generator client {
   provider = "prisma-client-js"
@@ -22,6 +22,8 @@ model User {
 
   notes    Note[]
   messages ChatMessage[]
+  sessions DiarySession[]
+  reports  PeriodReport[]
 }
 
 model Note {
@@ -45,7 +47,58 @@ model ChatMessage {
   role      String
   content   String
   model     String?
+  sessionId String?
+  session   DiarySession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  clientId  String?
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+  @@index([userId, sessionId])
+  @@unique([userId, clientId])
+}
+
+model DiarySession {
+  id              String    @id
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day             String
+  startedAt       DateTime
+  endedAt         DateTime?
+  title           String
+  mood            String?
+  analysis        Json?
+  analysisStatus  String    @default("idle")
+  analysisError   String?
+  deletedAt       DateTime?
+  status          String    @default("active")
+  weather         String?
+  stress          Int?
+  energy          Int?
+  primaryEmotions Json?
+  thoughts        Json?
+  coreNeeds       Json?
+  coreTheme       String?
+  lastUserAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  messages ChatMessage[]
+
+  @@index([userId, startedAt])
+}
+
+model PeriodReport {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  periodId    String
+  kind        String
+  label       String
+  generatedAt DateTime
+  payload     Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, periodId])
+  @@index([userId, generatedAt])
 }

@@ -5,9 +5,11 @@ import { api, ApiError } from "../../utils/api";
 import { isArchiveMark } from "../../utils/diary-moods";
 import {
   appendTurn,
+  ensureOpenSession,
   hydrateFromCloud,
   liveMessages,
   liveSessions,
+  newDiaryId,
   openTalkSession,
   requestInsight,
   resumePendingAnalysis,
@@ -62,11 +64,7 @@ export default function HomePage() {
       return;
     }
     try {
-      const [noteRes, chatRes] = await Promise.all([
-        api<{ notes: { id: string; content: string; createdAt: string }[] }>("/api/notes"),
-        api<{ messages: { id: string; role: string; content: string; createdAt: string }[] }>("/api/chat"),
-      ]);
-      await hydrateFromCloud(noteRes.notes || [], chatRes.messages || []);
+      await hydrateFromCloud();
       void resumePendingAnalysis();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -92,18 +90,24 @@ export default function HomePage() {
     setPending(true);
     setDraft("");
     try {
+      const open = await ensureOpenSession(content);
+      const userMessageId = newDiaryId();
       const res = await api<{
         note: { createdAt: string };
-        reply: { content: string; createdAt: string };
+        reply: { content: string; createdAt: string; id: string };
+        messages?: { id: string; createdAt: string }[];
       }>("/api/chat", {
         method: "POST",
-        data: { content },
+        data: { content, sessionId: open.id, clientId: userMessageId },
       });
       await appendTurn({
         text: content,
         reply: res.reply.content,
         createdAt: new Date(res.note.createdAt).getTime() || Date.now(),
         replyAt: new Date(res.reply.createdAt).getTime() || Date.now(),
+        sessionId: open.id,
+        userMessageId,
+        assistantMessageId: res.reply.id,
       });
       syncLocal();
     } catch (err) {

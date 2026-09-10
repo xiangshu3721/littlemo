@@ -5,7 +5,7 @@ import { daysInMonth, startOfWeek, toDay } from "../../utils/diary-dates";
 import { moodById } from "../../utils/diary-moods";
 import { hydrateFromCloud, liveMessages, liveSessions, resumePendingAnalysis } from "../../utils/diary-store";
 import type { MoodId, Session } from "../../utils/diary-types";
-import { api, ApiError } from "../../utils/api";
+import { ApiError } from "../../utils/api";
 import { isLoggedIn } from "../../utils/session";
 import { SessionDigest } from "./digest";
 import { PeriodInsight } from "./insight";
@@ -29,31 +29,19 @@ export default function DiaryPage() {
   }
 
   async function load() {
-    // 本地日记先出来，避免卡在云端请求
+    // 缓存先出来，再从云端拉账号日记
     refresh();
     if (!isLoggedIn()) {
-      // 未登录仍可看本地日历；需要写笔记再去登录
       return;
     }
     try {
-      const [noteRes, chatRes] = await Promise.all([
-        api<{ notes: { id: string; content: string; createdAt: string }[] }>("/api/notes", {
-          timeout: 8_000,
-        }),
-        api<{ messages: { id: string; role: string; content: string; createdAt: string }[] }>(
-          "/api/chat",
-          { timeout: 8_000 },
-        ),
-      ]);
-      await hydrateFromCloud(noteRes.notes || [], chatRes.messages || []);
+      await hydrateFromCloud();
       void resumePendingAnalysis();
       refresh();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        // 登录过期不挡本地日记；用户从「我的」重新登即可
         return;
       }
-      // 云端失败静默：本地 store 仍可用
     }
   }
 

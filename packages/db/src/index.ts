@@ -24,5 +24,5 @@ export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
   },
 });
 
-export type { Prisma, User, Note, ChatMessage } from "@prisma/client";
+export type { Prisma, User, Note, ChatMessage, DiarySession, PeriodReport } from "@prisma/client";
 export { PrismaClient } from "@prisma/client";
