@@ -29,24 +29,32 @@ export default function DiaryPage() {
   }
 
   async function load() {
+    // 本地日记先出来，避免卡在云端请求
+    refresh();
     if (!isLoggedIn()) {
-      Taro.redirectTo({ url: "/pages/login/index" });
+      // 未登录仍可看本地日历；需要写笔记再去登录
       return;
     }
     try {
       const [noteRes, chatRes] = await Promise.all([
-        api<{ notes: { id: string; content: string; createdAt: string }[] }>("/api/notes"),
-        api<{ messages: { id: string; role: string; content: string; createdAt: string }[] }>("/api/chat"),
+        api<{ notes: { id: string; content: string; createdAt: string }[] }>("/api/notes", {
+          timeout: 8_000,
+        }),
+        api<{ messages: { id: string; role: string; content: string; createdAt: string }[] }>(
+          "/api/chat",
+          { timeout: 8_000 },
+        ),
       ]);
       await hydrateFromCloud(noteRes.notes || [], chatRes.messages || []);
       void resumePendingAnalysis();
+      refresh();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        Taro.redirectTo({ url: "/pages/login/index" });
+        // 登录过期不挡本地日记；用户从「我的」重新登即可
         return;
       }
+      // 云端失败静默：本地 store 仍可用
     }
-    refresh();
   }
 
   const pendingAnalysis = sessions.some((s) => s.analysisStatus === "pending");
