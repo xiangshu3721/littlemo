@@ -21,7 +21,7 @@ import {
 import type { Message } from "../../utils/diary-types";
 import { pickChatImage, isPickCancel } from "../../utils/image";
 import { getToken, getUser, isLoggedIn, saveSession, type SessionUser } from "../../utils/session";
-import { statusBarPad, usePageTheme } from "../../utils/theme";
+import { customNavInset, usePageTheme } from "../../utils/theme";
 import "./index.scss";
 
 function clock(ts: number) {
@@ -45,7 +45,7 @@ export default function HomePage() {
   const [nickname, setNickname] = useState(displayName(getUser()));
   const [tagline, setTagline] = useState(companionTagline());
   const [face, setFace] = useState(avatarSrc(getUser()));
-  const topPad = useMemo(() => statusBarPad(), []);
+  const [inset, setInset] = useState(customNavInset);
 
   const bubbles = useMemo(() => {
     const list = [...thread];
@@ -113,6 +113,7 @@ export default function HomePage() {
   }
 
   useDidShow(() => {
+    setInset(customNavInset());
     void load();
   });
 
@@ -202,11 +203,28 @@ export default function HomePage() {
 
   return (
     <View className={`home ${theme.className}`}>
-      <View className="home__header" style={{ paddingTop: `${topPad}PX` }}>
+      <View
+        className="home__header"
+        style={{
+          paddingTop: `${inset.paddingTop}PX`,
+          paddingRight: `${inset.paddingRight}PX`,
+          paddingBottom: `${inset.paddingBottom}PX`,
+          minHeight: `${inset.paddingTop + inset.rowHeight + inset.paddingBottom}PX`,
+        }}
+      >
         <View className="home__who" onClick={goMine}>
-          <View className="home__avatar" aria-label="打开我的资料">
+          <View
+            className="home__avatar"
+            aria-label="打开我的资料"
+            style={{ width: `${inset.rowHeight}PX`, height: `${inset.rowHeight}PX` }}
+          >
             {face ? (
-              <Image className="home__avatar-img" src={face} mode="aspectFill" />
+              <Image
+                className="home__avatar-img"
+                src={face}
+                mode="aspectFill"
+                style={{ width: `${inset.rowHeight}PX`, height: `${inset.rowHeight}PX` }}
+              />
             ) : (
               <Text className="home__avatar-mark">{avatarInitial(nickname)}</Text>
             )}
@@ -216,13 +234,15 @@ export default function HomePage() {
             <Text className="home__tagline">{tagline}</Text>
           </View>
         </View>
-        <Button
+        <View
           className="home__theme"
+          hoverClass="none"
           aria-label={theme.isDark ? "切换到白天 · 干净手账" : "切换到黑夜 · 墨夜金线"}
+          style={{ width: `${inset.rowHeight}PX`, height: `${inset.rowHeight}PX` }}
           onClick={theme.cycleDayNight}
         >
           <View className={theme.isDark ? "glyph glyph--moon" : "glyph glyph--sun"} />
-        </Button>
+        </View>
       </View>
       <View className="home__hairline" />
       <ScrollView className="home__feed" scrollY scrollIntoView={lastId}>

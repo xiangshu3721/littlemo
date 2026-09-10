@@ -117,13 +117,49 @@ export function applyChrome(resolved: ResolvedTheme) {
 }
 
 export function statusBarPad() {
+  return customNavInset().paddingTop;
+}
+
+export type CustomNavInset = {
+  paddingTop: number;
+  paddingRight: number;
+  paddingBottom: number;
+  rowHeight: number;
+};
+
+/** Custom-nav inset: keep content left of the WeChat capsule, aligned to its row. */
+export function customNavInset(): CustomNavInset {
+  const fallback: CustomNavInset = {
+    paddingTop: 12,
+    paddingRight: 104,
+    paddingBottom: 8,
+    rowHeight: 32,
+  };
   try {
-    const info = Taro.getSystemInfoSync();
-    const status = Number(info.statusBarHeight || 0);
-    const safe = Number(info.safeArea?.top || 0);
-    return Math.max(12, status, safe);
+    const sys = Taro.getSystemInfoSync();
+    const status = Number(sys.statusBarHeight || 0);
+    const safe = Number(sys.safeArea?.top || 0);
+    const windowWidth = Number(sys.windowWidth || 0);
+    let menu: { top?: number; height?: number; left?: number } = {};
+    try {
+      menu = Taro.getMenuButtonBoundingClientRect() || {};
+    } catch {
+      menu = {};
+    }
+    const menuTop = Number(menu.top || 0);
+    const menuHeight = Number(menu.height || 0);
+    const menuLeft = Number(menu.left || 0);
+    const paddingTop = Math.max(fallback.paddingTop, menuTop || status || safe);
+    const rowHeight = menuHeight > 0 ? menuHeight : fallback.rowHeight;
+    const paddingBottom =
+      menuTop > 0 && status > 0 ? Math.max(6, menuTop - status) : fallback.paddingBottom;
+    const paddingRight =
+      menuLeft > 0 && windowWidth > menuLeft
+        ? windowWidth - menuLeft + 8
+        : fallback.paddingRight;
+    return { paddingTop, paddingRight, paddingBottom, rowHeight };
   } catch {
-    return 12;
+    return fallback;
   }
 }
 
@@ -144,14 +180,13 @@ export function usePageTheme() {
   });
 
   const cycleDayNight = useCallback(() => {
-    const pref = readStoredPreference();
-    const current = resolveTheme(pref);
-    const nextPref: ThemePreference = current === "dark" ? "light" : "dark";
-    writeStoredPreference(nextPref);
-    const next = resolveTheme(nextPref);
-    setPreferenceState(nextPref);
-    setResolved(next);
-    applyChrome(next);
+    setResolved((current) => {
+      const nextPref: ThemePreference = current === "dark" ? "light" : "dark";
+      writeStoredPreference(nextPref);
+      applyChrome(nextPref);
+      setPreferenceState(nextPref);
+      return nextPref;
+    });
   }, []);
 
   return {
