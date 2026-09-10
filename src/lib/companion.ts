@@ -39,6 +39,7 @@ export function ensureCrisisCopy(userText: string, reply: string) {
 export function toGatewayHistory(
   rows: { role: string; content: string }[],
   latest: string,
+  extras: { hasImage?: boolean } = {},
 ): { role: "user" | "assistant"; content: string }[] {
   const history = rows.slice(-LIMITS.historyTurns).map((row) => {
     const role: "user" | "assistant" = row.role === "assistant" ? "assistant" : "user";
@@ -51,6 +52,17 @@ export function toGatewayHistory(
   const last = history.at(-1);
   if (!last || last.role !== "user" || !latest.trim()) {
     history.push({ role: "user", content: wrapUntrusted("原话", clipText(latest, LIMITS.latestChars)) });
+  }
+  if (extras.hasImage) {
+    for (let i = history.length - 1; i >= 0; i -= 1) {
+      if (history[i].role === "user") {
+        history[i] = {
+          ...history[i],
+          content: `${history[i].content}\n（还附了一张图，你看不到图）`,
+        };
+        break;
+      }
+    }
   }
   return history;
 }

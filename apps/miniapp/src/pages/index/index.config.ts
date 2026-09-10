@@ -1,3 +1,5 @@
 export default definePageConfig({
-  navigationBarTitleText: "有点情绪",
+  navigationStyle: "custom",
+  navigationBarTextStyle: "black",
+  disableScroll: true,
 });

@@ -4,9 +4,11 @@ import { useState } from "react";
 import { ApiError } from "../../utils/api";
 import { loginWithWeChat } from "../../utils/auth";
 import { isLoggedIn } from "../../utils/session";
+import { usePageTheme } from "../../utils/theme";
 import "./index.scss";
 
 export default function LoginPage() {
+  const theme = usePageTheme();
   const [busy, setBusy] = useState(false);
 
   useDidShow(() => {
@@ -30,7 +32,7 @@ export default function LoginPage() {
   }
 
   return (
-    <View className="login">
+    <View className={`login ${theme.className}`}>
       <View className="login__mark" />
       <Text className="login__title">有点情绪</Text>
       <Text className="login__body">繁华之外的心灵净土，让灵魂慢一点，让烦恼少一些</Text>

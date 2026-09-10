@@ -37,6 +37,8 @@ export type Message = {
   createdAt: number;
   day: string;
   text: string;
+  /** Local file path or data URL. Images stay on-device; the API only gets hasImage. */
+  image?: string;
   pending?: boolean;
 };
 

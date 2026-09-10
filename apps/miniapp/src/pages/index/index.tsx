@@ -1,7 +1,13 @@
-import { View, Text, Textarea, Button, ScrollView } from "@tarojs/components";
+import { View, Text, Textarea, Button, ScrollView, Image } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
 import { useMemo, useState } from "react";
 import { api, ApiError } from "../../utils/api";
+import {
+  avatarInitial,
+  avatarSrc,
+  companionTagline,
+  displayName,
+} from "../../utils/avatar";
 import { isArchiveMark } from "../../utils/diary-moods";
 import {
   appendTurn,
@@ -13,7 +19,9 @@ import {
   resumePendingAnalysis,
 } from "../../utils/diary-store";
 import type { Message } from "../../utils/diary-types";
-import { isLoggedIn } from "../../utils/session";
+import { pickChatImage, isPickCancel } from "../../utils/image";
+import { getToken, getUser, isLoggedIn, saveSession, type SessionUser } from "../../utils/session";
+import { customNavInset, usePageTheme } from "../../utils/theme";
 import "./index.scss";
 
 function clock(ts: number) {
@@ -23,13 +31,21 @@ function clock(ts: number) {
 }
 
 export default function HomePage() {
+  const theme = usePageTheme();
   const [thread, setThread] = useState<Message[]>([]);
   const [endedById, setEndedById] = useState<Record<string, boolean>>({});
   const [draft, setDraft] = useState("");
+  const [image, setImage] = useState("");
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState(false);
   const [closing, setClosing] = useState(false);
   const [canInsight, setCanInsight] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [openPlus, setOpenPlus] = useState(false);
+  const [nickname, setNickname] = useState(displayName(getUser()));
+  const [tagline, setTagline] = useState(companionTagline());
+  const [face, setFace] = useState(avatarSrc(getUser()));
+  const [inset, setInset] = useState(customNavInset);
 
   const bubbles = useMemo(() => {
     const list = [...thread];
@@ -47,6 +63,13 @@ export default function HomePage() {
     return list;
   }, [thread, pending]);
 
+  function syncProfile(user?: SessionUser | null) {
+    const current = user || getUser();
+    setNickname(displayName(current));
+    setTagline(companionTagline());
+    setFace(avatarSrc(current));
+  }
+
   function syncLocal() {
     const sessions = liveSessions();
     const map: Record<string, boolean> = {};
@@ -61,11 +84,18 @@ export default function HomePage() {
       Taro.redirectTo({ url: "/pages/login/index" });
       return;
     }
+    syncProfile(getUser());
     try {
-      const [noteRes, chatRes] = await Promise.all([
+      const [noteRes, chatRes, meRes] = await Promise.all([
         api<{ notes: { id: string; content: string; createdAt: string }[] }>("/api/notes"),
         api<{ messages: { id: string; role: string; content: string; createdAt: string }[] }>("/api/chat"),
+        api<{ user: SessionUser }>("/api/me").catch(() => null),
       ]);
+      const token = getToken();
+      if (token && meRes?.user) {
+        saveSession(token, meRes.user);
+        syncProfile(meRes.user);
+      }
       await hydrateFromCloud(noteRes.notes || [], chatRes.messages || []);
       void resumePendingAnalysis();
     } catch (err) {
@@ -79,34 +109,42 @@ export default function HomePage() {
       });
     }
     syncLocal();
+    setReady(true);
   }
 
   useDidShow(() => {
+    setInset(customNavInset());
     void load();
   });
 
   async function send() {
     const content = draft.trim();
-    if (!content || busy) return;
+    if ((!content && !image) || busy) return;
+    const sendingImage = image;
     setBusy(true);
     setPending(true);
     setDraft("");
+    setImage("");
+    setOpenPlus(false);
     try {
       const res = await api<{
         note: { createdAt: string };
         reply: { content: string; createdAt: string };
       }>("/api/chat", {
         method: "POST",
-        data: { content },
+        data: { content, hasImage: Boolean(sendingImage) },
       });
       await appendTurn({
         text: content,
+        image: sendingImage || undefined,
         reply: res.reply.content,
         createdAt: new Date(res.note.createdAt).getTime() || Date.now(),
         replyAt: new Date(res.reply.createdAt).getTime() || Date.now(),
       });
       syncLocal();
     } catch (err) {
+      setDraft(content);
+      setImage(sendingImage);
       const msg =
         err instanceof ApiError
           ? err.message
@@ -138,12 +176,82 @@ export default function HomePage() {
     }
   }
 
+  async function onPickImage() {
+    if (busy) return;
+    setOpenPlus(false);
+    try {
+      const path = await pickChatImage();
+      setImage(path);
+    } catch (err) {
+      if (isPickCancel(err)) return;
+      const message = err instanceof Error ? err.message : "图片读不进去";
+      Taro.showToast({ title: message.slice(0, 40), icon: "none" });
+    }
+  }
+
+  function goMine() {
+    Taro.switchTab({ url: "/pages/mine/index" });
+  }
+
+  function previewPhoto(src: string) {
+    if (!src) return;
+    Taro.previewImage({ urls: [src], current: src });
+  }
+
   const lastId = bubbles.at(-1)?.id;
+  const canSend = Boolean(draft.trim() || image);
 
   return (
-    <View className="home">
-      <ScrollView className="home__feed" scrollY scrollIntoView={lastId}>
-        {bubbles.length === 0 ? (
+    <View className={`home ${theme.className}`}>
+      <View
+        className="home__header"
+        style={{
+          paddingTop: `${inset.paddingTop}PX`,
+          paddingRight: `${inset.paddingRight}PX`,
+          paddingBottom: `${inset.paddingBottom}PX`,
+          minHeight: `${inset.paddingTop + inset.rowHeight + inset.paddingBottom}PX`,
+        }}
+      >
+        <View className="home__who" onClick={goMine}>
+          <View
+            className="home__avatar"
+            aria-label="打开我的资料"
+            style={{ width: `${inset.rowHeight}PX`, height: `${inset.rowHeight}PX` }}
+          >
+            {face ? (
+              <Image
+                className="home__avatar-img"
+                src={face}
+                mode="aspectFill"
+                style={{ width: `${inset.rowHeight}PX`, height: `${inset.rowHeight}PX` }}
+              />
+            ) : (
+              <Text className="home__avatar-mark">{avatarInitial(nickname)}</Text>
+            )}
+          </View>
+          <View className="home__who-copy">
+            <Text className="home__name">{nickname}</Text>
+            <Text className="home__tagline">{tagline}</Text>
+          </View>
+        </View>
+        <View
+          className="home__theme"
+          hoverClass="none"
+          aria-label={theme.isDark ? "切换到白天 · 干净手账" : "切换到黑夜 · 墨夜金线"}
+          style={{ width: `${inset.rowHeight}PX`, height: `${inset.rowHeight}PX` }}
+          onClick={theme.cycleDayNight}
+        >
+          <View className={theme.isDark ? "glyph glyph--moon" : "glyph glyph--sun"} />
+        </View>
+      </View>
+      <View className="home__hairline" />
+      <ScrollView className="home__feed" scrollY scrollX={false} scrollIntoView={lastId}>
+        <View className="home__feed-inner">
+        {!ready ? (
+          <View className="home__loading">
+            <Text className="home__loading-text">在打开本机记录…</Text>
+          </View>
+        ) : bubbles.length === 0 ? (
           <View className="home__empty">
             <View className="home__seal" />
             <Text className="home__empty-title">去记下这一刻</Text>
@@ -157,11 +265,19 @@ export default function HomePage() {
               (Boolean(endedById[bubble.sessionId]) && (!next || next.sessionId !== bubble.sessionId));
             const hideArchiveBubble = isArchiveMark(bubble.text) && bubble.role === "assistant";
             return (
-              <View id={bubble.id} key={bubble.id}>
+              <View id={bubble.id} key={bubble.id} className="home__turn">
                 {hideArchiveBubble ? null : (
                   <View className={`bubble ${bubble.role === "user" ? "bubble--user" : "bubble--ai"}`}>
                     <View className={`bubble__sheet ${bubble.pending ? "bubble__sheet--pending" : ""}`}>
-                      <Text className="bubble__text">{bubble.text}</Text>
+                      {bubble.image ? (
+                        <Image
+                          className="bubble__photo"
+                          src={bubble.image}
+                          mode="aspectFill"
+                          onClick={() => previewPhoto(bubble.image!)}
+                        />
+                      ) : null}
+                      {bubble.text ? <Text className="bubble__text">{bubble.text}</Text> : null}
                     </View>
                     <Text className="bubble__time">{bubble.pending ? "" : clock(bubble.createdAt)}</Text>
                   </View>
@@ -173,6 +289,7 @@ export default function HomePage() {
             );
           })
         )}
+        </View>
       </ScrollView>
       <View className="home__composer">
         {canInsight ? (
@@ -184,7 +301,30 @@ export default function HomePage() {
             {closing ? "正在收这段…" : "就聊到这，帮我深度洞察下这段情绪"}
           </Button>
         ) : null}
+        {image ? (
+          <View className="home__preview">
+            <Image className="home__preview-img" src={image} mode="aspectFill" />
+            <Button className="home__preview-drop" aria-label="去掉这张图" onClick={() => setImage("")}>
+              ×
+            </Button>
+          </View>
+        ) : null}
+        {openPlus ? (
+          <View className="home__plus-menu">
+            <Button className="home__photo" onClick={() => void onPickImage()}>
+              照片
+            </Button>
+          </View>
+        ) : null}
         <View className="home__row">
+          <Button
+            className="home__plus"
+            aria-label="附件"
+            disabled={busy}
+            onClick={() => setOpenPlus((v) => !v)}
+          >
+            <View className="glyph glyph--plus" />
+          </Button>
           <Textarea
             className="home__input"
             value={draft}
@@ -193,8 +333,13 @@ export default function HomePage() {
             placeholder="想说就说…"
             onInput={(e) => setDraft(e.detail.value)}
           />
-          <Button className="home__send" disabled={busy || !draft.trim()} onClick={send}>
-            送出
+          <Button
+            className="home__send"
+            aria-label="发送"
+            disabled={busy || !canSend}
+            onClick={() => void send()}
+          >
+            <View className="glyph glyph--send" />
           </Button>
         </View>
       </View>

@@ -1,20 +1,42 @@
 .mine {
+  --desk: #e8e8e6;
+  --paper: #f7f7f7;
+  --surface: #ffffff;
+  --wash: #f0f0ee;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #999999;
+  --line: #e5e5e5;
+  --seal: #8a4a42;
   min-height: 100vh;
   padding: 24px 20px 48px;
-  background: #e8e8e6;
+  background: var(--desk);
+  color: var(--ink);
+}
+
+.mine.theme-dark {
+  --desk: #050505;
+  --paper: #0a0a0a;
+  --surface: #0c0c0c;
+  --wash: #161616;
+  --ink: #f5f1e6;
+  --ink-soft: #d8cbb6;
+  --ink-faint: #c4a574;
+  --line: #c4a574;
+  --seal: #c4a574;
 }
 
 .mine__mark {
   display: block;
   font-size: 11px;
   letter-spacing: 0.18em;
-  color: #999999;
+  color: var(--ink-faint);
   margin-bottom: 20px;
 }
 
 .mine__card {
-  background: #ffffff;
-  border: 1px solid #e5e5e5;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 20px;
   padding: 28px 20px;
   display: flex;
@@ -27,24 +49,46 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  border: 1.4px solid #e5e5e5;
-  background: #f7f7f7;
+  border: 1.4px solid var(--line);
+  background: var(--wash);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mine__avatar-img {
+  width: 64px;
+  height: 64px;
+}
+
+.mine__avatar-mark {
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 22px;
+  color: var(--ink-soft);
 }
 
 .mine__name {
   margin-top: 12px;
   font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
   font-size: 18px;
-  color: #1a1a1a;
+  color: var(--ink);
+}
+
+.mine__hint {
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
 }
 
 .mine__row {
   width: 100%;
   height: 48px;
-  background: #ffffff;
-  border: 1px solid #e5e5e5;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-bottom: none;
-  color: #1a1a1a;
+  color: var(--ink);
   font-size: 15px;
   text-align: left;
   padding: 0 16px;
@@ -57,9 +101,9 @@
 }
 
 .mine__row--last {
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--line);
   border-radius: 0 0 20px 20px;
-  color: #8a4a42;
+  color: var(--seal);
 }
 
 .mine__foot {
@@ -67,5 +111,5 @@
   margin-top: 24px;
   font-size: 12px;
   line-height: 1.7;
-  color: #999999;
+  color: var(--ink-faint);
 }
