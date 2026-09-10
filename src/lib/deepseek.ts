@@ -50,6 +50,7 @@ async function chatJson(
       temperature,
       response_format: { type: "json_object" },
     }),
+    signal: AbortSignal.timeout(22_000),
   });
   if (!res.ok) {
     try {

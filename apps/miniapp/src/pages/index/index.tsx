@@ -133,6 +133,7 @@ export default function HomePage() {
         messages?: { id: string; createdAt: string }[];
       }>("/api/chat", {
         method: "POST",
+        timeout: 25_000,
         data: {
           content,
           hasImage: Boolean(sendingImage),
