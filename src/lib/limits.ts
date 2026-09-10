@@ -20,6 +20,7 @@ export const LIMITS = {
   jsonBodyPeriod: 180_000,
   jsonBodyAuth: 4_096,
   jsonBodyNotes: 24_000,
+  jsonBodyMe: 410_000,
   rateChatPerMin: 24,
   rateAnalyzePerMin: 8,
   ratePeriodPerMin: 6,
