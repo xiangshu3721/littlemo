@@ -107,9 +107,14 @@ export default function HomePage() {
       });
       syncLocal();
     } catch (err) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : "没接上本机服务，请确认电脑已开 littlemo（端口 3000）";
       Taro.showToast({
-        title: err instanceof ApiError ? err.message : "没接上",
+        title: msg.slice(0, 40),
         icon: "none",
+        duration: 2500,
       });
     } finally {
       setBusy(false);
