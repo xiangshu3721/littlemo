@@ -145,7 +145,14 @@
 .home__feed {
   flex: 1;
   height: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.home__feed-inner {
   padding: 16px 16px 8px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .home__loading {
@@ -198,6 +205,8 @@
 .bubble {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
   margin-bottom: 14px;
 }
 
@@ -216,6 +225,7 @@
   line-height: 1.7;
   color: var(--ink);
   overflow-wrap: anywhere;
+  box-sizing: border-box;
 }
 
 .bubble--user .bubble__sheet {

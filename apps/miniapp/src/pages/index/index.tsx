@@ -246,6 +246,7 @@ export default function HomePage() {
       </View>
       <View className="home__hairline" />
       <ScrollView className="home__feed" scrollY scrollIntoView={lastId}>
+        <View className="home__feed-inner">
         {!ready ? (
           <View className="home__loading">
             <Text className="home__loading-text">在打开本机记录…</Text>
@@ -288,6 +289,7 @@ export default function HomePage() {
             );
           })
         )}
+        </View>
       </ScrollView>
       <View className="home__composer">
         {canInsight ? (
