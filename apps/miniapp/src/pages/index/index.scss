@@ -145,7 +145,10 @@
 .home__feed {
   flex: 1;
   height: 0;
+  width: 100%;
+  box-sizing: border-box;
   padding: 16px 16px 8px;
+  overflow-x: hidden;
 }
 
 .home__loading {
@@ -198,6 +201,9 @@
 .bubble {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   margin-bottom: 14px;
 }
 
@@ -211,6 +217,7 @@
 
 .bubble__sheet {
   max-width: 82%;
+  box-sizing: border-box;
   padding: 10px 14px;
   font-size: 15px;
   line-height: 1.7;
@@ -248,6 +255,8 @@
 
 .bubble__time {
   margin-top: 4px;
+  max-width: 100%;
+  box-sizing: border-box;
   font-size: 11px;
   color: var(--ink-faint);
   letter-spacing: 0.04em;
