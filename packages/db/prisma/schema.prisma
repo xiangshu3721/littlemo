@@ -77,10 +77,14 @@ model DiarySession {
   primaryEmotions Json?
   thoughts        Json?
   coreNeeds       Json?
-  coreTheme       String?
-  lastUserAt      DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  coreTheme              String?
+  lastUserAt             DateTime?
+  patternSummary         Json?
+  patternSummaryStatus   String    @default("idle")
+  patternSummaryError    String?
+  patternSummaryAt       DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   messages ChatMessage[]
 

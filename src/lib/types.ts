@@ -32,6 +32,18 @@ export type Analysis = {
   energyTo?: number | null;
 };
 
+
+/** One-page co-created 「情绪模式小结」 — warm takeaway, not clinical diagnosis. */
+export type PatternSummary = {
+  headline: string;
+  narrative: string;
+  threads: string[];
+  takeaway: string;
+  generatedAt?: number;
+};
+
+export type PatternSummaryStatus = "idle" | "pending" | "done" | "error";
+
 export type AnalysisStatus = "idle" | "pending" | "done" | "error";
 
 export type ChatRole = "user" | "assistant";
@@ -68,6 +80,10 @@ export type Session = {
   analysis?: Analysis | null;
   analysisStatus: AnalysisStatus;
   analysisError?: string;
+  patternSummary?: PatternSummary | null;
+  patternSummaryStatus?: PatternSummaryStatus;
+  patternSummaryError?: string;
+  patternSummaryAt?: number;
   deletedAt?: number;
   status?: EpisodeStatus;
   stage?: EmotionStage;

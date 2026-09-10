@@ -267,6 +267,30 @@
   background: var(--paper);
 }
 
+.home__summary {
+  width: 100%;
+  min-height: 40px;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid #5f6f52;
+  color: #5f6f52;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home__summary[disabled] {
+  opacity: 0.55;
+}
+
+.home.theme-dark .home__summary {
+  border-color: #c4a574;
+  color: #c4a574;
+}
+
 .home__close {
   width: 100%;
   margin-bottom: 8px;

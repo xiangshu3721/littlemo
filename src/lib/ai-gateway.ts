@@ -51,6 +51,7 @@ async function deepseekChat(input: ChatInput): Promise<ChatResult> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(22_000),
   });
   if (!res.ok) {
     try {

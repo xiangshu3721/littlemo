@@ -33,7 +33,9 @@ export function useLiveDiary() {
     void load();
   });
 
-  const pendingAnalysis = sessions.some((s) => s.analysisStatus === "pending");
+  const pendingAnalysis = sessions.some(
+    (s) => s.analysisStatus === "pending" || s.patternSummaryStatus === "pending",
+  );
 
   useEffect(() => {
     if (!pendingAnalysis) return undefined;
