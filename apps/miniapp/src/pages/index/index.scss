@@ -40,22 +40,24 @@
 .home__header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 16px 12px;
+  gap: 8px;
+  padding-left: 16px;
   background: var(--paper);
+  box-sizing: border-box;
 }
 
 .home__who {
   min-width: 0;
   flex: 1;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .home__avatar {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   overflow: hidden;
   background: var(--wash);
@@ -67,46 +69,60 @@
 }
 
 .home__avatar-img {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
 }
 
 .home__avatar-mark {
   font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--ink-soft);
 }
 
 .home__who-copy {
   min-width: 0;
   flex: 1;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
 .home__name {
   font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 500;
   letter-spacing: 0.02em;
   color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 100%;
 }
 
 .home__tagline {
-  margin-top: 2px;
-  font-size: 12px;
-  line-height: 16px;
+  margin-top: 1px;
+  font-size: 11px;
+  line-height: 14px;
   letter-spacing: 0.02em;
   color: var(--ink-faint);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 100%;
 }
 
-.home__theme,
+.home__theme {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  position: relative;
+  z-index: 1;
+}
+
 .home__plus,
 .home__send {
   width: 44px;
@@ -336,8 +352,7 @@
   color: var(--ink-faint);
 }
 
-.home__plus[disabled],
-.home__theme[disabled] {
+.home__plus[disabled] {
   opacity: 0.45;
 }
 
@@ -369,30 +384,96 @@
   height: 14px;
 }
 
+.home.theme-dark .home__header,
+.home.theme-dark .home__composer {
+  background: #0a0a0a;
+}
+
+.home.theme-dark {
+  background: #050505;
+  color: #f5f1e6;
+}
+
+.home.theme-dark .bubble--user .bubble__sheet {
+  background: #121212;
+  border-color: #c4a574;
+  color: #f5f1e6;
+}
+
+.home.theme-dark .bubble--ai .bubble__sheet {
+  background: #101010;
+  border-color: #c4a574;
+  color: #f5f1e6;
+}
+
+.home.theme-dark .home__input {
+  background: #0c0c0c;
+  border-color: #c4a574;
+  color: #f5f1e6;
+}
+
+.home.theme-dark .home__send {
+  background: #c4a574;
+  color: #0a0a0a;
+}
+
+.home.theme-light {
+  background: #e8e8e6;
+  color: #1a1a1a;
+}
+
+.home.theme-light .home__header,
+.home.theme-light .home__composer {
+  background: #f7f7f7;
+}
+
+.home.theme-light .bubble--user .bubble__sheet {
+  background: #f3f3f1;
+  border-color: #e5e5e5;
+  color: #1a1a1a;
+}
+
+.home.theme-light .bubble--ai .bubble__sheet {
+  background: #ffffff;
+  border-color: #e5e5e5;
+  color: #1a1a1a;
+}
+
+.home.theme-light .home__input {
+  background: #ffffff;
+  border-color: #e5e5e5;
+  color: #1a1a1a;
+}
+
+.home.theme-light .home__send {
+  background: #5f6f52;
+  color: #ffffff;
+}
+
 .glyph--sun {
   box-sizing: border-box;
-  border: 1.4px solid currentColor;
+  border: 1.6px solid currentColor;
   border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  margin: 6px;
+  width: 8px;
+  height: 8px;
+  margin: 7px;
   box-shadow:
-    0 -7px 0 -3.4px currentColor,
-    0 7px 0 -3.4px currentColor,
-    -7px 0 0 -3.4px currentColor,
-    7px 0 0 -3.4px currentColor,
-    -5px -5px 0 -3.4px currentColor,
-    5px -5px 0 -3.4px currentColor,
-    -5px 5px 0 -3.4px currentColor,
-    5px 5px 0 -3.4px currentColor;
+    0 -6px 0 -3.2px currentColor,
+    0 6px 0 -3.2px currentColor,
+    -6px 0 0 -3.2px currentColor,
+    6px 0 0 -3.2px currentColor,
+    -4.2px -4.2px 0 -3.2px currentColor,
+    4.2px -4.2px 0 -3.2px currentColor,
+    -4.2px 4.2px 0 -3.2px currentColor,
+    4.2px 4.2px 0 -3.2px currentColor;
 }
 
 .glyph--moon {
-  width: 16px;
-  height: 16px;
-  margin: 3px;
+  width: 14px;
+  height: 14px;
+  margin: 4px;
   border-radius: 50%;
-  box-shadow: inset 4px -2px 0 0 currentColor;
+  box-shadow: inset 3.5px -2px 0 0 currentColor;
 }
 
 .glyph--send {
