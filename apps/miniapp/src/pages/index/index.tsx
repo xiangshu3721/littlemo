@@ -245,7 +245,7 @@ export default function HomePage() {
         </View>
       </View>
       <View className="home__hairline" />
-      <ScrollView className="home__feed" scrollY scrollIntoView={lastId}>
+      <ScrollView className="home__feed" scrollY scrollX={false} scrollIntoView={lastId}>
         <View className="home__feed-inner">
         {!ready ? (
           <View className="home__loading">
@@ -265,7 +265,7 @@ export default function HomePage() {
               (Boolean(endedById[bubble.sessionId]) && (!next || next.sessionId !== bubble.sessionId));
             const hideArchiveBubble = isArchiveMark(bubble.text) && bubble.role === "assistant";
             return (
-              <View id={bubble.id} key={bubble.id}>
+              <View id={bubble.id} key={bubble.id} className="home__turn">
                 {hideArchiveBubble ? null : (
                   <View className={`bubble ${bubble.role === "user" ? "bubble--user" : "bubble--ai"}`}>
                     <View className={`bubble__sheet ${bubble.pending ? "bubble__sheet--pending" : ""}`}>

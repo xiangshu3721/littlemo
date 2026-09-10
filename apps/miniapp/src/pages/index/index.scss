@@ -14,10 +14,13 @@
   --accent-ink: #ffffff;
   --seal: #8a4a42;
   height: 100vh;
+  width: 100%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: var(--desk);
   color: var(--ink);
+  box-sizing: border-box;
 }
 
 .home.theme-dark {
@@ -146,13 +149,20 @@
   flex: 1;
   height: 0;
   width: 100%;
+  min-width: 0;
+  min-height: 0;
   box-sizing: border-box;
 }
 
 .home__feed-inner {
-  padding: 16px 16px 8px;
+  padding: 16px 0 8px;
   box-sizing: border-box;
+}
+
+.home__turn {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .home__loading {
@@ -206,8 +216,11 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   margin-bottom: 14px;
+  padding: 0 16px;
 }
 
 .bubble--user {
@@ -225,6 +238,7 @@
   line-height: 1.7;
   color: var(--ink);
   overflow-wrap: anywhere;
+  word-break: break-word;
   box-sizing: border-box;
 }
 
@@ -254,6 +268,8 @@
 
 .bubble__text {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bubble__time {
@@ -286,7 +302,7 @@
 
 .home__archive {
   display: block;
-  padding: 4px 0 12px;
+  padding: 4px 16px 12px;
   text-align: center;
   font-size: 11px;
   letter-spacing: 0.12em;
