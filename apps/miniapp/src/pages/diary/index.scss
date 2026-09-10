@@ -786,3 +786,50 @@
 .diary.theme-dark .cal__dot {
   background: #c4a574;
 }
+
+.diary.theme-dark .sheet,
+.diary.theme-dark .plate {
+  background: #0c0c0c;
+  border-color: #c4a574;
+}
+
+.diary.theme-dark .pill {
+  background: #161616;
+  color: #d8cbb6;
+}
+
+.diary.theme-dark .pill--on {
+  background: #c4a574;
+  color: #0a0a0a;
+}
+
+.diary.theme-dark .sheet__title,
+.diary.theme-dark .chapter__title,
+.diary.theme-dark .plate__title,
+.diary.theme-dark .insight__label,
+.diary.theme-dark .flow__title,
+.diary.theme-dark .day__title {
+  color: #f5f1e6;
+}
+
+.diary.theme-dark .sheet__preview,
+.diary.theme-dark .sheet__line,
+.diary.theme-dark .chapter__p,
+.diary.theme-dark .insight__empty,
+.diary.theme-dark .insight__faint,
+.diary.theme-dark .nav__ghost,
+.diary.theme-dark .sheet__toggle,
+.diary.theme-dark .loop__step {
+  color: #d8cbb6;
+}
+
+.diary.theme-dark .sheet__toggle--accent,
+.diary.theme-dark .sheet__action {
+  color: #c4a574;
+}
+
+.diary.theme-dark .sheet__block--line,
+.diary.theme-dark .sheet__foot,
+.diary.theme-dark .sheet__inner {
+  border-color: #c4a574;
+}

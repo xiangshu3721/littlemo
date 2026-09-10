@@ -1,75 +1,19 @@
 import { View, Text, Button, ScrollView } from "@tarojs/components";
-import Taro, { useDidShow } from "@tarojs/taro";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { daysInMonth, startOfWeek, toDay } from "../../utils/diary-dates";
 import { moodById } from "../../utils/diary-moods";
-import { hydrateFromCloud, liveMessages, liveSessions, resumePendingAnalysis } from "../../utils/diary-store";
-import type { MoodId, Session } from "../../utils/diary-types";
-import { api, ApiError } from "../../utils/api";
-import { isLoggedIn } from "../../utils/session";
+import type { MoodId } from "../../utils/diary-types";
 import { usePageTheme } from "../../utils/theme";
+import { useLiveDiary } from "../../utils/use-live-diary";
 import { SessionDigest } from "./digest";
-import { PeriodInsight } from "./insight";
 import "./index.scss";
-
-type Tab = "calendar" | "period";
 
 export default function DiaryPage() {
   const theme = usePageTheme();
-  const [tab, setTab] = useState<Tab>("calendar");
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [messages, setMessages] = useState(liveMessages());
+  const { sessions, messages, tick, refresh } = useLiveDiary();
   const [cursor, setCursor] = useState(() => new Date());
   const [pickedDay, setPickedDay] = useState<string>(() => toDay(new Date()));
   const [monthOpen, setMonthOpen] = useState(false);
-  const [tick, setTick] = useState(0);
-
-  function refresh() {
-    setSessions(liveSessions());
-    setMessages(liveMessages());
-    setTick((n) => n + 1);
-  }
-
-  async function load() {
-    // 本地日记先出来，避免卡在云端请求
-    refresh();
-    if (!isLoggedIn()) {
-      // 未登录仍可看本地日历；需要写笔记再去登录
-      return;
-    }
-    try {
-      const [noteRes, chatRes] = await Promise.all([
-        api<{ notes: { id: string; content: string; createdAt: string }[] }>("/api/notes", {
-          timeout: 8_000,
-        }),
-        api<{ messages: { id: string; role: string; content: string; createdAt: string }[] }>(
-          "/api/chat",
-          { timeout: 8_000 },
-        ),
-      ]);
-      await hydrateFromCloud(noteRes.notes || [], chatRes.messages || []);
-      void resumePendingAnalysis();
-      refresh();
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        // 登录过期不挡本地日记；用户从「我的」重新登即可
-        return;
-      }
-      // 云端失败静默：本地 store 仍可用
-    }
-  }
-
-  const pendingAnalysis = sessions.some((s) => s.analysisStatus === "pending");
-
-  useDidShow(() => {
-    void load();
-  });
-
-  useEffect(() => {
-    if (!pendingAnalysis) return undefined;
-    const timer = setInterval(() => refresh(), 1200);
-    return () => clearInterval(timer);
-  }, [pendingAnalysis]);
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -126,91 +70,77 @@ export default function DiaryPage() {
 
   return (
     <View className={`diary ${theme.className}`}>
-      <View className="tabs">
-        <Button className={`tabs__btn ${tab === "calendar" ? "tabs__btn--on" : ""}`} onClick={() => setTab("calendar")}>
-          日历
-        </Button>
-        <Button className={`tabs__btn ${tab === "period" ? "tabs__btn--on" : ""}`} onClick={() => setTab("period")}>
-          这一段日子
-        </Button>
-      </View>
       <ScrollView className="diary__feed" scrollY>
-        {tab === "calendar" ? (
-          <View>
-            <View className="cal__nav">
-              <Button
-                className="cal__arrow"
-                onClick={() => setCursor(new Date(year, month - 1, 1))}
+        <View className="cal__nav">
+          <Button
+            className="cal__arrow"
+            onClick={() => setCursor(new Date(year, month - 1, 1))}
+          >
+            ‹
+          </Button>
+          <Text className="cal__title">
+            {year}年{month + 1}月
+          </Text>
+          <Button
+            className="cal__arrow"
+            onClick={() => setCursor(new Date(year, month + 1, 1))}
+          >
+            ›
+          </Button>
+        </View>
+        <Button className="cal__fold" onClick={() => setMonthOpen((v) => !v)}>
+          {monthOpen ? "收起月历" : "展开月历"}
+          <Text className={`sheet__caret ${monthOpen ? "sheet__caret--open" : ""}`}>⌄</Text>
+        </Button>
+        <View className="cal__week">
+          {"一二三四五六日".split("").map((d) => (
+            <Text key={d} className="cal__wd">
+              {d}
+            </Text>
+          ))}
+        </View>
+        <View className="cal__grid">
+          {calendarDays.map((date, i) => {
+            if (!date) return <View key={`e-${i}`} className="cal__cell" />;
+            const day = toDay(date);
+            const inMonth = date.getMonth() === month;
+            const mark = marksByDay.get(day);
+            const selected = pickedDay === day;
+            const mood = mark?.mood ? moodById(mark.mood) : undefined;
+            return (
+              <View
+                key={day}
+                className={`cal__cell ${selected ? "cal__cell--on" : ""} ${inMonth ? "" : "cal__cell--out"}`}
+                onClick={() => {
+                  setPickedDay(day);
+                  if (date.getMonth() !== month) setCursor(new Date(date.getFullYear(), date.getMonth(), 1));
+                }}
               >
-                ‹
-              </Button>
-              <Text className="cal__title">
-                {year}年{month + 1}月
-              </Text>
-              <Button
-                className="cal__arrow"
-                onClick={() => setCursor(new Date(year, month + 1, 1))}
-              >
-                ›
-              </Button>
-            </View>
-            <Button className="cal__fold" onClick={() => setMonthOpen((v) => !v)}>
-              {monthOpen ? "收起月历" : "展开月历"}
-              <Text className={`sheet__caret ${monthOpen ? "sheet__caret--open" : ""}`}>⌄</Text>
-            </Button>
-            <View className="cal__week">
-              {"一二三四五六日".split("").map((d) => (
-                <Text key={d} className="cal__wd">
-                  {d}
-                </Text>
-              ))}
-            </View>
-            <View className="cal__grid">
-              {calendarDays.map((date, i) => {
-                if (!date) return <View key={`e-${i}`} className="cal__cell" />;
-                const day = toDay(date);
-                const inMonth = date.getMonth() === month;
-                const mark = marksByDay.get(day);
-                const selected = pickedDay === day;
-                const mood = mark?.mood ? moodById(mark.mood) : undefined;
-                return (
-                  <View
-                    key={day}
-                    className={`cal__cell ${selected ? "cal__cell--on" : ""} ${inMonth ? "" : "cal__cell--out"}`}
-                    onClick={() => {
-                      setPickedDay(day);
-                      if (date.getMonth() !== month) setCursor(new Date(date.getFullYear(), date.getMonth(), 1));
-                    }}
-                  >
-                    <Text className={`cal__num ${selected ? "cal__num--on" : ""}`}>{date.getDate()}</Text>
-                    {mood ? (
-                      <View className="cal__mood" style={{ background: mood.tint }} />
-                    ) : mark?.has ? (
-                      <View className={`cal__dot ${selected ? "cal__dot--on" : ""}`} />
-                    ) : (
-                      <View className="cal__spacer" />
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-            {pickedDay ? (
-              <View className="day">
-                <Text className="chapter-mark">这一日</Text>
-                <Text className="day__title">{pickedDay}</Text>
-                {daySessions.length === 0 ? (
-                  <Text className="day__empty">这一天还没有记下的情绪。</Text>
+                <Text className={`cal__num ${selected ? "cal__num--on" : ""}`}>{date.getDate()}</Text>
+                {mood ? (
+                  <View className="cal__mood" style={{ background: mood.tint }} />
+                ) : mark?.has ? (
+                  <View className={`cal__dot ${selected ? "cal__dot--on" : ""}`} />
                 ) : (
-                  daySessions.map((session) => (
-                    <SessionDigest key={`${session.id}-${tick}`} session={session} onChange={refresh} />
-                  ))
+                  <View className="cal__spacer" />
                 )}
               </View>
-            ) : null}
+            );
+          })}
+        </View>
+        {pickedDay ? (
+          <View className="day">
+            <Text className="chapter-mark">这一日</Text>
+            <Text className="day__title">{pickedDay}</Text>
+            {daySessions.length === 0 ? (
+              <Text className="day__empty">这一天还没有记下的情绪。</Text>
+            ) : (
+              daySessions.map((session) => (
+                <SessionDigest key={`${session.id}-${tick}`} session={session} onChange={refresh} />
+              ))
+            )}
           </View>
-        ) : (
-          <PeriodInsight sessions={sessions} messages={messages} />
-        )}
+        ) : null}
       </ScrollView>
     </View>
   );
