@@ -744,3 +744,45 @@
 .unseen {
   margin-top: 16px;
 }
+
+.diary.theme-dark {
+  background: #050505;
+  color: #f5f1e6;
+}
+
+.diary.theme-dark .tabs {
+  background: #0a0a0a;
+  border-bottom-color: #c4a574;
+}
+
+.diary.theme-dark .tabs__btn {
+  color: #d8cbb6;
+}
+
+.diary.theme-dark .tabs__btn--on {
+  background: #c4a574;
+  color: #0a0a0a;
+}
+
+.diary.theme-dark .cal__title,
+.diary.theme-dark .cal__arrow,
+.diary.theme-dark .cal__fold,
+.diary.theme-dark .cal__wd,
+.diary.theme-dark .cal__num,
+.diary.theme-dark .day__title,
+.diary.theme-dark .day__empty,
+.diary.theme-dark .chapter-mark {
+  color: #f5f1e6;
+}
+
+.diary.theme-dark .cal__num--on {
+  color: #0a0a0a;
+}
+
+.diary.theme-dark .cal__cell--on {
+  background: #c4a574;
+}
+
+.diary.theme-dark .cal__dot {
+  background: #c4a574;
+}

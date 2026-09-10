@@ -7,6 +7,7 @@ import { hydrateFromCloud, liveMessages, liveSessions, resumePendingAnalysis } f
 import type { MoodId, Session } from "../../utils/diary-types";
 import { api, ApiError } from "../../utils/api";
 import { isLoggedIn } from "../../utils/session";
+import { usePageTheme } from "../../utils/theme";
 import { SessionDigest } from "./digest";
 import { PeriodInsight } from "./insight";
 import "./index.scss";
@@ -14,6 +15,7 @@ import "./index.scss";
 type Tab = "calendar" | "period";
 
 export default function DiaryPage() {
+  const theme = usePageTheme();
   const [tab, setTab] = useState<Tab>("calendar");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [messages, setMessages] = useState(liveMessages());
@@ -123,7 +125,7 @@ export default function DiaryPage() {
   }, [monthOpen, year, month, pickedDay]);
 
   return (
-    <View className="diary">
+    <View className={`diary ${theme.className}`}>
       <View className="tabs">
         <Button className={`tabs__btn ${tab === "calendar" ? "tabs__btn--on" : ""}`} onClick={() => setTab("calendar")}>
           日历

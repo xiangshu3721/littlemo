@@ -1,17 +1,32 @@
 .login {
+  --desk: #e8e8e6;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #999999;
+  --accent: #5f6f52;
+  --accent-ink: #ffffff;
   min-height: 100vh;
   padding: 88px 36px 48px;
-  background: #e8e8e6;
+  background: var(--desk);
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.login.theme-dark {
+  --desk: #050505;
+  --ink: #f5f1e6;
+  --ink-soft: #d8cbb6;
+  --ink-faint: #c4a574;
+  --accent: #c4a574;
+  --accent-ink: #0a0a0a;
 }
 
 .login__mark {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: 1.4px solid #999999;
+  border: 1.4px solid var(--ink-faint);
   opacity: 0.7;
   margin-bottom: 28px;
 }
@@ -19,7 +34,7 @@
 .login__title {
   font-family: "Songti SC", "Noto Serif SC", "STSong", "Source Han Serif SC", serif;
   font-size: 28px;
-  color: #1a1a1a;
+  color: var(--ink);
   letter-spacing: 0.08em;
 }
 
@@ -28,7 +43,7 @@
   max-width: 240px;
   font-size: 14px;
   line-height: 1.8;
-  color: #4a4a4a;
+  color: var(--ink-soft);
   text-align: center;
 }
 
@@ -37,8 +52,8 @@
   width: 180px;
   height: 44px;
   border-radius: 999px;
-  background: #5f6f52;
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--accent-ink);
   font-size: 15px;
   letter-spacing: 0.12em;
   display: flex;
@@ -49,6 +64,6 @@
 .login__hint {
   margin-top: 20px;
   font-size: 11px;
-  color: #999999;
+  color: var(--ink-faint);
   letter-spacing: 0.04em;
 }

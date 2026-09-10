@@ -7,6 +7,11 @@ export default defineAppConfig({
     navigationBarTextStyle: "black",
     backgroundColor: "#e8e8e6",
   },
+  permission: {
+    "scope.camera": {
+      desc: "用来拍一张此刻的照片，放进对话或换成头像。",
+    },
+  },
   tabBar: {
     color: "#999999",
     selectedColor: "#5f6f52",
