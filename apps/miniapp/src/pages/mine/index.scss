@@ -161,11 +161,51 @@
   color: #5f6f52;
 }
 
-.mine__name {
+.mine__name-row {
   margin-top: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--wash);
+}
+
+.mine__name {
   font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
   font-size: 18px;
   color: var(--ink);
+}
+
+.mine__name-edit {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: #5f6f52;
+}
+
+.mine__name-input {
+  margin-top: 12px;
+  width:  100%;
+  max-width: 220px;
+  height: 40px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  text-align: center;
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 18px;
+  color: var(--ink);
+  background: var(--wash);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.mine__name-placeholder {
+  color: var(--ink-faint);
+  font-size: 15px;
+}
+
+.theme-dark .mine__name-edit {
+  color: var(--ink-faint);
 }
 
 .mine__hint {

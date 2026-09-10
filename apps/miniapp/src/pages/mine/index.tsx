@@ -1,11 +1,12 @@
-import { View, Text, Button, Image } from "@tarojs/components";
+import { View, Text, Button, Image, Input } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { api, ApiError } from "../../utils/api";
 import {
   avatarSrcForDisplay,
   displayName,
   imagePathToAvatarDataUrl,
+  NICKNAME_MAX,
   readLocalProfile,
   shouldUseChooseAvatar,
   writeLocalProfile,
@@ -17,15 +18,30 @@ import "./index.scss";
 export default function MinePage() {
   const theme = usePageTheme();
   const [name, setName] = useState(displayName(getUser()));
+  const [draftName, setDraftName] = useState(displayName(getUser()));
+  const [editingName, setEditingName] = useState(false);
   const [avatarSrc, setAvatarSrc] = useState("");
   const [avatarKey, setAvatarKey] = useState(0);
   const [busy, setBusy] = useState(false);
+  const savingNameRef = useRef(false);
+  const editingNameRef = useRef(false);
   const nativeAvatar = useMemo(() => shouldUseChooseAvatar(), []);
 
   function showUser(user: SessionUser | null) {
-    setName(displayName(user));
+    const next = displayName(user);
+    setName(next);
+    if (!editingNameRef.current) setDraftName(next);
     const url = user?.avatar || readLocalProfile().avatarDataUrl || "";
     setAvatarSrc(url ? avatarSrcForDisplay(url) : "");
+  }
+
+  function syncLocalFromUser(user: SessionUser) {
+    const local = readLocalProfile();
+    writeLocalProfile({
+      ...local,
+      nickname: user.nickname?.trim() || local.nickname,
+      avatarDataUrl: user.avatar && isDataUrl(user.avatar) ? user.avatar : local.avatarDataUrl,
+    });
   }
 
   async function refreshFromCloud() {
@@ -37,9 +53,7 @@ export default function MinePage() {
         avatar: data.user.avatar || local?.avatar || null,
       };
       saveUser(merged);
-      if (merged.avatar && isDataUrl(merged.avatar)) {
-        writeLocalProfile({ ...readLocalProfile(), avatarDataUrl: merged.avatar });
-      }
+      syncLocalFromUser(merged);
       showUser(merged);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -76,9 +90,7 @@ export default function MinePage() {
         data: { avatar: dataUrl },
       });
       saveUser(data.user);
-      if (data.user.avatar && isDataUrl(data.user.avatar)) {
-        writeLocalProfile({ ...readLocalProfile(), avatarDataUrl: data.user.avatar });
-      }
+      syncLocalFromUser(data.user);
       showUser(data.user);
       setAvatarKey((n) => n + 1);
     } catch (err) {
@@ -107,6 +119,72 @@ export default function MinePage() {
     } catch {
       /* canceled */
     }
+  }
+
+  function beginEditName() {
+    if (busy || savingNameRef.current) return;
+    setDraftName(name);
+    editingNameRef.current = true;
+    setEditingName(true);
+  }
+
+  async function persistNickname(raw: string) {
+    if (savingNameRef.current) return;
+    const trimmed = String(raw || "").trim().slice(0, NICKNAME_MAX);
+    if (!trimmed) {
+      Taro.showToast({ title: "昵称不能为空", icon: "none" });
+      setDraftName(name);
+      editingNameRef.current = false;
+      setEditingName(false);
+      return;
+    }
+    if (trimmed === name) {
+      editingNameRef.current = false;
+      setEditingName(false);
+      return;
+    }
+    if (busy) return;
+    savingNameRef.current = true;
+    setBusy(true);
+    try {
+      const current = getUser();
+      const optimistic: SessionUser = {
+        ...(current || { id: "", nickname: trimmed, avatar: null }),
+        nickname: trimmed,
+      };
+      saveUser(optimistic);
+      writeLocalProfile({ ...readLocalProfile(), nickname: trimmed });
+      setName(trimmed);
+      setDraftName(trimmed);
+      editingNameRef.current = false;
+      setEditingName(false);
+
+      const data = await api<{ user: SessionUser }>("/api/me", {
+        method: "PATCH",
+        data: { nickname: trimmed },
+      });
+      saveUser(data.user);
+      syncLocalFromUser(data.user);
+      showUser(data.user);
+      Taro.showToast({ title: "已保存", icon: "none" });
+    } catch (err) {
+      const message = err instanceof ApiError || err instanceof Error ? err.message : "昵称没存上";
+      Taro.showToast({ title: message, icon: "none" });
+      showUser(getUser());
+      editingNameRef.current = false;
+      setEditingName(false);
+    } finally {
+      savingNameRef.current = false;
+      setBusy(false);
+    }
+  }
+
+  function onNameConfirm() {
+    void persistNickname(draftName);
+  }
+
+  function onNameBlur() {
+    void persistNickname(draftName);
   }
 
   function onPrivacy() {
@@ -157,8 +235,27 @@ export default function MinePage() {
           </View>
           <Text className="mine__avatar-hint">{busy ? "在换…" : "点按更换"}</Text>
         </Button>
-        <Text className="mine__name">{name}</Text>
-        <Text className="mine__hint">点头像可更换，会保存到账号。</Text>
+        {editingName ? (
+          <Input
+            className="mine__name-input"
+            type="nickname"
+            focus
+            maxlength={NICKNAME_MAX}
+            value={draftName}
+            placeholder="怎么称呼你"
+            placeholderClass="mine__name-placeholder"
+            confirmType="done"
+            onInput={(e) => setDraftName(String(e.detail.value || "").slice(0, NICKNAME_MAX))}
+            onConfirm={onNameConfirm}
+            onBlur={onNameBlur}
+          />
+        ) : (
+          <View className="mine__name-row" onClick={beginEditName}>
+            <Text className="mine__name">{name}</Text>
+            <Text className="mine__name-edit">改</Text>
+          </View>
+        )}
+        <Text className="mine__hint">点昵称或头像可更换，会保存到账号。</Text>
       </View>
       <Button className="mine__row" onClick={onPrivacy}>
         隐私说明
@@ -167,7 +264,7 @@ export default function MinePage() {
         退出登录
       </Button>
       <Text className="mine__foot">
-        点「就聊到这」后，深度洞察会出现在「情绪日记」。清掉小程序数据，本机日记也会一起消失。
+        昵称与头像可随时改，保存后跟着账号走。点「就聊到这」后，深度洞察会出现在「情绪日记」。清掉小程序数据，本机日记也会一起消失。
       </Text>
     </View>
   );

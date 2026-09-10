@@ -2,6 +2,8 @@ import Taro from "@tarojs/taro";
 import type { SessionUser } from "./session";
 
 export const DEFAULT_NICKNAME = "阿布";
+/** Keep in sync with server LIMITS.nickname. */
+export const NICKNAME_MAX = 24;
 export const DEFAULT_TAGLINE = "没事，有我在，陪你一起穿越情绪，看见自己";
 
 /** Keep in sync with web `LIMITS.avatarDataUrl`. */
@@ -145,7 +147,7 @@ export function readLocalProfile(): LocalProfile {
 
 export function writeLocalProfile(next: LocalProfile) {
   const avatar = isSafeImageDataUrl(next.avatarDataUrl) ? next.avatarDataUrl : undefined;
-  const nickname = String(next.nickname || "").trim().slice(0, 24);
+  const nickname = String(next.nickname || "").trim().slice(0, NICKNAME_MAX);
   const signature = String(next.signature || "").trim().slice(0, 140);
   Taro.setStorageSync(PROFILE_KEY, {
     nickname: nickname || undefined,
