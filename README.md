@@ -107,14 +107,15 @@ H5 调试（可选）：`npm run dev:h5`，并在 API 的 `CORS_ORIGINS` 里放�
 
 登录用 `wx.login` 的 `code` 换服务端 JWT；`session_key` 永不下发到客户端。
 
-## 下一步（真实环境）
+## 生产上线（CloudBase）
 
-1. 申请小程序 AppId，填入 `WECHAT_APPID` / `WECHAT_SECRET`，关掉 `WECHAT_MOCK`。
-2. 准备 PostgreSQL，执行 `npx prisma migrate deploy --schema packages/db/prisma/schema.prisma`。
-3. 设置高强度 `JWT_SECRET` 和服务器上的 `DEEPSEEK_API_KEY`。
-4. 配置合法域名与 HTTPS；不要把任何密钥写进 `apps/miniapp`。
+AppID 已是 `wx6f03736d4996c4e4`。把 Next API 放到 CloudBase 云托管 + PostgreSQL、配合法域名并上传小程序的步骤见：
 
-之后 Key 放到腾讯云时，网页和小程序都走 `/api/chat`、`/api/analyze`、`/api/period`。小程序登录、资料、笔记、日记段落和阶段洞察走现有接口；本机存储只做离线缓存。
+**[docs/cloudbase-go-live.md](docs/cloudbase-go-live.md)**（中文逐步清单；区分「你点控制台」与「工程师可代做」）。
+
+相关脚手架：`Dockerfile`（`output: 'standalone'`）、`cloudbaserc.json`（填真实 `envId`）、`.env.production.example`、`apps/miniapp/.env.production.example`、`scripts/build-miniapp-prod.sh`。密钥只放控制台 / 本机未跟踪文件，勿提交。
+
+上线后网页和小程序都走 `/api/chat`、`/api/analyze`、`/api/period`；小程序登录、资料、笔记、日记段落和阶段洞察走现有接口；本机存储只做离线缓存。
 
 ### 把本机日记升到云端（一次）
 

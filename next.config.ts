@@ -8,6 +8,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   transpilePackages: ["@littlemo/db"],
   serverExternalPackages: ["@prisma/client"],
   async headers() {

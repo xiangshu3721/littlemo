@@ -1,0 +1,25 @@
+{
+  "version": "2.0",
+  "envId": "YOUR_CLOUDBASE_ENV_ID",
+  "framework": {
+    "name": "littlemo",
+    "plugins": {
+      "server": {
+        "use": "@cloudbase/framework-plugin-container",
+        "inputs": {
+          "serviceName": "littlemo-api",
+          "servicePath": "/",
+          "localPath": "./",
+          "dockerfilePath": "Dockerfile",
+          "containerPort": 3000,
+          "uploadType": "package",
+          "envVariables": {
+            "WECHAT_MOCK": "0",
+            "NODE_ENV": "production",
+            "PORT": "3000"
+          }
+        }
+      }
+    }
+  }
+}
