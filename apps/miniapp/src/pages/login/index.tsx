@@ -39,7 +39,7 @@ export default function LoginPage() {
       <Button className="login__btn" onClick={onLogin}>
         {busy ? "在进去…" : "进入"}
       </Button>
-      <Text className="login__hint">微信登录。本地 mock 模式不需要真实 AppId。</Text>
+      <Text className="login__hint">使用微信身份安全进入。</Text>
     </View>
   );
 }

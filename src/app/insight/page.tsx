@@ -108,7 +108,8 @@ export default function InsightPage() {
 
   useEffect(() => {
     if (!ready || !stats.count) return;
-    void requestReport(false);
+    const timer = window.setTimeout(() => void requestReport(false), 0);
+    return () => window.clearTimeout(timer);
   }, [ready, period.id, stats.count, requestReport]);
 
   const tags = (report?.highFrequency.length ? report.highFrequency : stats.top).slice(0, 5);

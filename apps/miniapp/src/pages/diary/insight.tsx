@@ -247,10 +247,11 @@ export function PeriodInsight({
 
   useEffect(() => {
     if (!stats.count) {
-      setReport(null);
-      return;
+      const timer = setTimeout(() => setReport(null), 0);
+      return () => clearTimeout(timer);
     }
-    void requestReport(false);
+    const timer = setTimeout(() => void requestReport(false), 0);
+    return () => clearTimeout(timer);
   }, [period.id, stats.count, requestReport]);
 
   const tags = (report?.highFrequency.length ? report.highFrequency : stats.top).slice(0, 5);

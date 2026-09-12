@@ -1,11 +1,19 @@
-export default defineAppConfig({
-  pages: [
+const pages = [
     "pages/index/index",
     "pages/diary/index",
     "pages/insight/index",
     "pages/mine/index",
     "pages/login/index",
-  ],
+] as string[];
+
+// Temporary production self-check page. It is intentionally absent from every
+// production mini-program build and is not part of the tab bar.
+if (process.env.TARO_ENV === "weapp" && process.env.NODE_ENV !== "production") {
+  pages.push("pages/diagnostics/index");
+}
+
+export default defineAppConfig({
+  pages,
   window: {
     backgroundTextStyle: "light",
     navigationBarBackgroundColor: "#f7f7f7",

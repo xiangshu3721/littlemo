@@ -45,13 +45,11 @@ cp .env.example .env
 | 变量 | 说明 |
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL 连接串 |
-| `WECHAT_APPID` / `WECHAT_SECRET` | 小程序 jscode2session |
 | `JWT_SECRET` | 登录 JWT。生产必填 |
-| `WECHAT_MOCK` | `1` 时不调微信，任意非空 `code` 会创建/复用用户 |
 | `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | 服务端模型。小程序代码里不得出现 |
 | `CORS_ORIGINS` | 可选。Taro H5 跨域白名单 |
 
-小程序构建期只允许公开的 API 根地址，见 `apps/miniapp/.env.example` 的 `API_BASE_URL`。
+小程序本地/H5 构建可以使用公开的 `API_BASE_URL`；微信生产构建使用 `CLOUDBASE_ENV_ID` + `CLOUDBASE_SERVICE_NAME`，通过 CloudBase `callContainer` 调用云托管，不把公网 API 根地址写进正式小程序链路。
 
 ## 本地运行：网页 / API
 
@@ -65,17 +63,7 @@ npm run dev
 
 打开 http://localhost:3000 ，用手机宽度看网页最准。没有 DeepSeek Key 时网页仍可记录；分析/陪伴会提示失败。
 
-### Mock 微信登录（无需 AppId）
-
-`.env.local` 设 `WECHAT_MOCK=1`。任意 code 都能换 JWT：
-
-```bash
-curl -s -X POST http://localhost:3000/api/auth/wechat \
-  -H 'Content-Type: application/json' \
-  -d '{"code":"dev-user-1"}'
-```
-
-之后请求带 `Authorization: Bearer <token>`：
+登录必须来自 CloudBase 已认证请求；服务端据此签发 Littlemo JWT。之后请求带 `Authorization: Bearer <token>`：
 
 - `GET /api/me`；`PATCH /api/me` `{ "avatar": "data:image/jpeg;base64,…" }`（头像 data URL，需登录）
 - `GET` / `POST` / `PATCH` / `DELETE /api/notes`（`PATCH`/`DELETE` 也可用 `/api/notes/:id`）
@@ -103,25 +91,25 @@ H5 调试（可选）：`npm run dev:h5`，并在 API 的 `CORS_ORIGINS` 里放�
 
 ## 微信合法域名
 
-真机 / 正式版必须在[小程序后台](https://mp.weixin.qq.com)配置 **request 合法域名**（https，备案，不要带路径），例如 `https://your-api.example.com`。把 `API_BASE_URL` 建成这个源再 `npm run build:weapp`。
+微信生产版通过 CloudBase `callContainer` 访问云托管；按 CloudBase/微信控制台要求完成环境关联与服务配置即可，不再把 `littlemo.icu` 或自定义 API 域名作为本版本的前置条件。若另行构建 Taro H5，才需要为 H5 配置 `API_BASE_URL` 和 CORS。
 
-登录用 `wx.login` 的 `code` 换服务端 JWT；`session_key` 永不下发到客户端。
+登录由 CloudBase `signInWithOpenId({ useWxCloud: false })` 建立身份，再由服务端签发 Littlemo JWT。
 
 ## 生产上线（CloudBase）
 
-AppID 已是 `wx6f03736d4996c4e4`。把 Next API 放到 CloudBase 云托管 + PostgreSQL、配合法域名并上传小程序的步骤见：
+AppID 已是 `wx6f03736d4996c4e4`。把 Next API 放到 CloudBase 云托管 + PostgreSQL、关联小程序环境并上传小程序的步骤见：
 
 **[docs/cloudbase-go-live.md](docs/cloudbase-go-live.md)**（中文逐步清单；区分「你点控制台」与「工程师可代做」）。
 
 相关脚手架：`Dockerfile`（`output: 'standalone'`）、`cloudbaserc.json`（填真实 `envId`）、`.env.production.example`、`apps/miniapp/.env.production.example`、`scripts/build-miniapp-prod.sh`。密钥只放控制台 / 本机未跟踪文件，勿提交。
 
-上线后网页和小程序都走 `/api/chat`、`/api/analyze`、`/api/period`；小程序登录、资料、笔记、日记段落和阶段洞察走现有接口；本机存储只做离线缓存。
+上线后网页和小程序都走 `/api/chat`、`/api/analyze`、`/api/period`；小程序通过 CloudBase `callContainer` 调用，登录、资料、笔记、日记段落和阶段洞察走现有接口；本机存储只做离线缓存。
 
 ### 把本机日记升到云端（一次）
 
 上线前如果有人已经在小程序里记下过本机日记（`littlemo.diary.<userId>`）：
 
-1. 用同一个微信账号登录（开发可用 `WECHAT_MOCK=1`）。
+1. 用同一个微信账号登录。
 2. 打开「有点情绪」或「情绪日记」。客户端会 `GET /api/diary`；若云端还没有段落，就把本机 sessions / messages / reports 上传一次。
 3. 之后以数据库为准。清掉小程序缓存再登录，日记会从 `/api/diary` 拉回来。
 4. 开发者也可手动：登录拿到 JWT 后 `POST /api/diary`，body 为 `{ "sessions": […], "messages": […], "reports": […] }`。已有 `ChatMessage` 会按 id / clientId / 相近原文匹配，不会故意复制一份平行记录。

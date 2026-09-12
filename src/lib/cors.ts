@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getRequestId, requestLogFields } from "./request-context";
 
 function extraOrigins() {
   return (process.env.CORS_ORIGINS || "")
@@ -45,5 +46,9 @@ export function preflight(req: Request) {
 }
 
 export function apiJson(req: Request, body: unknown, status = 200) {
-  return withCors(req, NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } }));
+  const requestId = getRequestId(req);
+  const res = withCors(req, NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } }));
+  res.headers.set("X-Request-Id", requestId);
+  console.info(JSON.stringify(requestLogFields(req, status)));
+  return res;
 }

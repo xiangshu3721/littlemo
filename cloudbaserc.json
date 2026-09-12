@@ -14,9 +14,9 @@
           "containerPort": 3000,
           "uploadType": "package",
           "envVariables": {
-            "WECHAT_MOCK": "0",
             "NODE_ENV": "production",
-            "PORT": "3000"
+            "PORT": "3000",
+            "CLOUDBASE_SERVICE_NAME": "littlemo-api"
           }
         }
       }

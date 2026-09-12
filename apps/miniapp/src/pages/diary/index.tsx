@@ -31,7 +31,7 @@ export default function DiaryPage() {
       }
     }
     return map;
-  }, [sessions, messages, tick]);
+  }, [sessions, messages]);
 
   const daySessions = pickedDay
     ? sessions

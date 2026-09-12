@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/alt-text -- Taro Image has no cross-platform alt prop. */
 import { View, Text, Textarea, Button, ScrollView, Image } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
 import { useMemo, useState } from "react";
@@ -40,6 +41,7 @@ export default function HomePage() {
   const [image, setImage] = useState("");
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState(false);
+  const [pendingAt, setPendingAt] = useState(0);
   const [closing, setClosing] = useState(false);
   const [canInsight, setCanInsight] = useState(false);
   const [ready, setReady] = useState(false);
@@ -57,13 +59,13 @@ export default function HomePage() {
         sessionId: "",
         role: "assistant",
         text: "在听…",
-        createdAt: Date.now(),
+        createdAt: pendingAt,
         day: "",
         pending: true,
       });
     }
     return list;
-  }, [thread, pending]);
+  }, [thread, pending, pendingAt]);
 
   function syncProfile(user?: SessionUser | null) {
     const current = user || getUser();
@@ -121,6 +123,7 @@ export default function HomePage() {
     const sendingImage = image;
     setBusy(true);
     setPending(true);
+    setPendingAt(Date.now());
     setDraft("");
     setImage("");
     setOpenPlus(false);
@@ -158,7 +161,7 @@ export default function HomePage() {
       const msg =
         err instanceof ApiError
           ? err.message
-          : "没接上本机服务，请确认电脑已开 littlemo（端口 3000）";
+          : "这次没有接上服务，请稍后再试。";
       Taro.showToast({
         title: msg.slice(0, 40),
         icon: "none",
@@ -167,6 +170,7 @@ export default function HomePage() {
     } finally {
       setBusy(false);
       setPending(false);
+      setPendingAt(0);
     }
   }
 
@@ -258,7 +262,7 @@ export default function HomePage() {
       <ScrollView className="home__feed" scrollY scrollIntoView={lastId}>
         {!ready ? (
           <View className="home__loading">
-            <Text className="home__loading-text">在打开本机记录…</Text>
+            <Text className="home__loading-text">正在打开记录…</Text>
           </View>
         ) : bubbles.length === 0 ? (
           <View className="home__empty">

@@ -2,7 +2,11 @@ import { defineConfig } from "@tarojs/cli";
 import devConfig from "./dev";
 import prodConfig from "./prod";
 
-const apiBase = JSON.stringify(process.env.API_BASE_URL || "http://127.0.0.1:3000");
+const apiBase = JSON.stringify(
+  process.env.NODE_ENV === "production" ? "" : process.env.API_BASE_URL || "http://127.0.0.1:3000",
+);
+const cloudbaseEnvId = JSON.stringify(process.env.CLOUDBASE_ENV_ID || "");
+const cloudbaseServiceName = JSON.stringify(process.env.CLOUDBASE_SERVICE_NAME || "littlemo-api");
 
 export default defineConfig(async (merge) => {
   const baseConfig = {
@@ -20,6 +24,8 @@ export default defineConfig(async (merge) => {
     plugins: [],
     defineConstants: {
       API_BASE_URL: apiBase,
+      CLOUDBASE_ENV_ID: cloudbaseEnvId,
+      CLOUDBASE_SERVICE_NAME: cloudbaseServiceName,
     },
     copy: {
       patterns: [{ from: "src/assets/", to: "assets/" }],

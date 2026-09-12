@@ -1,4 +1,5 @@
 import Taro from "@tarojs/taro";
+import { ensurePrivacyAuthorized } from "./privacy";
 
 const IMAGE_INPUT_BYTES = 8 * 1024 * 1024;
 const IMAGE_OUTPUT_BYTES = 1_200_000;
@@ -100,6 +101,7 @@ async function persistLocal(tempPath: string) {
 }
 
 async function pickOne(maxEdge: number) {
+  if (!(await ensurePrivacyAuthorized())) fail("请先同意隐私保护指引。");
   const picked = await Taro.chooseImage({
     count: 1,
     sizeType: ["compressed"],

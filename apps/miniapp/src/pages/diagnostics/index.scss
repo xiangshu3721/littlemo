@@ -1,0 +1,93 @@
+.diagnostics {
+  min-height: 100vh;
+  padding: 28px 20px 40px;
+  background: #e8e8e6;
+  color: #1a1a1a;
+}
+
+.diagnostics__title {
+  display: block;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.diagnostics__hint {
+  display: block;
+  margin-top: 10px;
+  color: #777;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.diagnostics__list {
+  margin-top: 24px;
+}
+
+.diagnostics__item {
+  margin-bottom: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.diagnostics__row {
+  display: flex;
+  align-items: center;
+}
+
+.diagnostics__index {
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #e8e8e6;
+  color: #5f6f52;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+}
+
+.diagnostics__label {
+  flex: 1;
+  font-size: 15px;
+}
+
+.diagnostics__state {
+  font-size: 13px;
+}
+
+.diagnostics__state--success {
+  color: #5f6f52;
+}
+
+.diagnostics__state--failed {
+  color: #c85745;
+}
+
+.diagnostics__state--running {
+  color: #9b7a38;
+}
+
+.diagnostics__detail,
+.diagnostics__request,
+.diagnostics__error {
+  display: block;
+  margin-top: 8px;
+  color: #777;
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.diagnostics__error {
+  color: #c85745;
+}
+
+.diagnostics__button {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: #5f6f52;
+  color: #fff;
+  font-size: 15px;
+}

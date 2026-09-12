@@ -4,7 +4,7 @@
   "description": "有点情绪",
   "appid": "wx6f03736d4996c4e4",
   "setting": {
-    "urlCheck": false,
+    "urlCheck": true,
     "es6": false,
     "enhance": false,
     "compileHotReLoad": false,
@@ -12,7 +12,8 @@
     "minified": false,
     "coverView": true,
     "packNpmRelationList": [],
-    "ignoreUploadUnusedFiles": true
+    "ignoreDevUnusedFiles": false,
+    "ignoreUploadUnusedFiles": false
   },
   "compileType": "miniprogram",
   "libVersion": "3.5.5",

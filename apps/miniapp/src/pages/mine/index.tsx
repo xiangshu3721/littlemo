@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/alt-text -- Taro Image has no cross-platform alt prop. */
 import { View, Text, Button, Image, Input } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
 import { useMemo, useRef, useState } from "react";
@@ -12,6 +13,7 @@ import {
   writeLocalProfile,
 } from "../../utils/avatar";
 import { clearSession, getUser, isLoggedIn, saveUser, type SessionUser } from "../../utils/session";
+import { ensurePrivacyAuthorized } from "../../utils/privacy";
 import { usePageTheme } from "../../utils/theme";
 import "./index.scss";
 
@@ -121,8 +123,9 @@ export default function MinePage() {
     }
   }
 
-  function beginEditName() {
+  async function beginEditName() {
     if (busy || savingNameRef.current) return;
+    if (!(await ensurePrivacyAuthorized())) return;
     setDraftName(name);
     editingNameRef.current = true;
     setEditingName(true);
@@ -187,7 +190,7 @@ export default function MinePage() {
     void persistNickname(draftName);
   }
 
-  function onPrivacy() {
+  function showPrivacyFallback() {
     Taro.showModal({
       title: "隐私",
       content: "陪伴对话、情绪日记和深度洞察都会记在你的账号里。清掉这台设备上的小程序缓存，云端记录还在；重新登录后会再同步下来。分析密钥只放在服务器。照片留在本机，发给倾听者的只有「附了一张图」。",
@@ -195,6 +198,14 @@ export default function MinePage() {
       confirmText: "知道了",
       confirmColor: "#5f6f52",
     });
+  }
+
+  function onPrivacy() {
+    if (process.env.TARO_ENV === "weapp" && typeof Taro.openPrivacyContract === "function") {
+      Taro.openPrivacyContract({ fail: showPrivacyFallback });
+      return;
+    }
+    showPrivacyFallback();
   }
 
   function onLogout() {

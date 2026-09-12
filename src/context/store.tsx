@@ -648,7 +648,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         });
       }
     },
-    [analyze, persistMessage, persistSession, userLines, buildMemory, profile.region, findReopen, closeSession, latestTalkSession],
+    [persistMessage, persistSession, userLines, buildMemory, profile.region, findReopen, closeSession, latestTalkSession],
   );
 
   const addTurn = useCallback(

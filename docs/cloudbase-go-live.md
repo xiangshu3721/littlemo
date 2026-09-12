@@ -50,7 +50,7 @@ openssl rand -base64 48
 "envId": "YOUR_CLOUDBASE_ENV_ID"
 ```
 
-把 `YOUR_CLOUDBASE_ENV_ID` 换成控制台里的环境 ID。敏感变量（`DATABASE_URL`、`WECHAT_SECRET`、`JWT_SECRET`、`DEEPSEEK_API_KEY`）**不要**写进 `cloudbaserc.json` 再提交；在云托管「环境变量 / 密钥」面板配置。
+把 `YOUR_CLOUDBASE_ENV_ID` 换成控制台里的环境 ID。敏感变量（`DATABASE_URL`、`JWT_SECRET`、`DEEPSEEK_API_KEY`）**不要**写进 `cloudbaserc.json` 再提交；在云托管「环境变量 / 密钥」面板配置。
 
 本地若安装了 CloudBase CLI，可用（需你登录，**可能触发账号交互**，工程师默认只文档化）：
 
@@ -71,10 +71,7 @@ openssl rand -base64 48
 | 变量 | 生产值注意 |
 | --- | --- |
 | `DATABASE_URL` | 云 PostgreSQL 连接串 |
-| `WECHAT_APPID` | `wx6f03736d4996c4e4` |
-| `WECHAT_SECRET` | 微信小程序后台 → 开发 → 开发管理 → AppSecret |
 | `JWT_SECRET` | 高强度随机串 |
-| `WECHAT_MOCK` | **`0`**（必须关 mock） |
 | `DEEPSEEK_API_KEY` | DeepSeek 控制台 |
 | `DEEPSEEK_MODEL` | 如 `deepseek-chat` |
 
@@ -116,53 +113,55 @@ Standalone 启动命令已在镜像内：`node server.js`（`HOSTNAME=0.0.0.0`�
 
 ---
 
-## 5. 绑定 HTTPS 域名
+## 5. 云托管访问方式
 
 **「你点控制台」**
 
-任选其一：
+微信小程序生产版使用 `@cloudbase/js-sdk` 初始化独立 CloudBase 环境，再以 `app.callContainer()` 调用 `littlemo-api`，不需要把自定义域名接入本版本链路。客户端先以 `auth.signInWithOpenId({ useWxCloud: false })` 建立 CloudBase 身份；云托管服务端通过 CloudBase SDK 读取当前调用者身份，不读取或信任客户端上传的 `openid` / `userId`，登录接口再签发现有业务 JWT。
 
-1. **CloudBase / 云托管默认 HTTPS 域名**（控制台提供的 `*.*.tcloudbaseapp.com` 等）——最快联调。
-2. **自定义域名**：按控制台指引绑定、配置证书；若小程序主体要求备案域名，按微信与腾讯云要求完成备案后再用于「合法域名」。
-
-记下最终形如 `https://api.example.com` 的 **源**（无路径、无尾斜杠）。
+如需 Taro H5 或外部系统联调，再按控制台要求绑定 HTTPS 域名，并将源配置到 `CORS_ORIGINS` / `API_BASE_URL`。
 
 健康检查建议：
 
 ```bash
-curl -sS -o /dev/null -w '%{http_code}\n' https://你的域名/api/me
-# 未登录可能是 401；能连上 HTTPS 即可
+curl -sS https://云托管地址/api/health
+# 预期：{"status":"ok","service":"littlemo-api",...}
+curl -sS https://云托管地址/api/health/database
+# 预期：数据库可用时返回 200；未连通时返回 503，不泄漏连接串
 ```
 
 ---
 
-## 6. 微信小程序后台：request 合法域名
+## 6. 微信小程序后台：确认 CloudBase 关联
 
-**「你点控制台」**（[mp.weixin.qq.com](https://mp.weixin.qq.com) → 开发 → 开发管理 → 开发设置 → 服务器域名）
+**「你点控制台」**（[mp.weixin.qq.com](https://mp.weixin.qq.com) / CloudBase 控制台）
 
-- 将 **request 合法域名** 设为上一步的 HTTPS 源（不要带路径）。
-- 域名需满足微信要求（通常需备案、HTTPS 等）。
+- 确认小程序 AppID 已关联现有 CloudBase 环境。
+- 确认云托管服务名为 `littlemo-api`，服务端口为 `3000`。
+- 在 CloudBase 云托管 / HTTP 网关的访问配置中开启官方身份认证，并确认认证请求会注入 `x-cloudbase-context`；不要让业务服务存在可绕过认证网关的公网直达入口。后端只从这个当前请求上下文建立业务用户身份，不接受客户端 body/header 自报的 `uid`、`openid`。
+- 先在控制台配置小程序用户隐私保护指引，至少覆盖微信昵称/头像、选中的照片或视频、账号云端存储的对话与日记，以及发送给 DeepSeek 的处理用途；提审时同步勾选实际收集的个人信息类型。
+- 本版本的小程序 API 走 `callContainer`，不要求把 `littlemo.icu` 或自定义 API 域名写入 `request 合法域名`。
 
 ---
 
-## 7. 小程序：改 API_BASE_URL → 构建 → 上传 → 审核 → 发布
+## 7. 小程序：配置 CloudBase 环境 → 构建 → 上传 → 审核 → 发布
 
 **「工程师可代做」**（构建）：
 
 ```bash
 # 方式 A：脚本（推荐）
-API_BASE_URL=https://你的API域名 ./scripts/build-miniapp-prod.sh
+CLOUDBASE_ENV_ID=你的现有环境ID CLOUDBASE_SERVICE_NAME=littlemo-api ./scripts/build-miniapp-prod.sh
 
 # 方式 B：手动
 cd apps/miniapp
-cp .env.production.example .env   # 编辑 API_BASE_URL=https://…
-# 或：export API_BASE_URL=https://…
+cp .env.production.example .env   # 编辑 CLOUDBASE_ENV_ID=…
+# 本地/H5 才需要 export API_BASE_URL=https://…
 npm run build:weapp
 ```
 
 说明：
 
-- 构建期只允许公开的 `API_BASE_URL`；**禁止**把 `WECHAT_SECRET` / `JWT_SECRET` / `DEEPSEEK_API_KEY` 放进 `apps/miniapp`。
+- 微信生产构建只注入公开的 `CLOUDBASE_ENV_ID` / `CLOUDBASE_SERVICE_NAME`；本地/H5 可额外使用公开的 `API_BASE_URL`，生产微信小程序不得 fallback 到它。**禁止**把 `JWT_SECRET` / `DEEPSEEK_API_KEY` 放进 `apps/miniapp`。
 - 本地开发仍可用 `apps/miniapp/.env.example` 的 `http://127.0.0.1:3000`，并在开发者工具关闭域名校验。
 
 **「你点控制台 / 你本机微信开发者工具」**：
@@ -175,8 +174,7 @@ npm run build:weapp
 
 ## 8. 上线后冒烟
 
-- 真机预览 / 体验版：登录（真实 `wx.login`）、发一条陪伴消息、结束一段日记、看日历/阶段是否落库。
-- 服务端：`WECHAT_MOCK` 必须为 `0`；日志中不应再出现 mock 用户路径（除非误配）。
+- 真机预览 / 体验版：登录（CloudBase 身份认证）、发一条陪伴消息、结束一段日记、看日历/阶段是否落库。
 - 若曾用本机日记：参考根 `README.md`「把本机日记升到云端」。
 
 ---
@@ -205,5 +203,5 @@ npm run build:weapp
 | `next.config.ts` | `output: 'standalone'` |
 | `cloudbaserc.json` | CloudBase Framework 骨架；`envId` 需你替换 |
 | `.env.production.example` | 服务端生产变量清单（无密钥） |
-| `apps/miniapp/.env.production.example` | `API_BASE_URL=https://your-api-domain` |
-| `scripts/build-miniapp-prod.sh` | 校验 HTTPS `API_BASE_URL` 后 `build:weapp` |
+| `apps/miniapp/.env.production.example` | CloudBase 环境 ID + 服务名 |
+| `scripts/build-miniapp-prod.sh` | 校验 CloudBase 环境 ID 后 `build:weapp` |
