@@ -1,0 +1,25 @@
+# Never send local environment files or secrets to the CloudBase build context.
+.env*
+**/.env*
+
+# Source control and local dependencies/build output.
+.git
+**/.git
+node_modules
+**/node_modules
+.next
+**/.next
+out
+**/out
+build
+**/build
+coverage
+**/coverage
+dist
+**/dist
+*.log
+**/.DS_Store
+
+# The container serves the root Next.js app; the separate Taro app is not part
+# of this Docker build.
+apps/miniapp
