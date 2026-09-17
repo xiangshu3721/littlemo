@@ -4,6 +4,8 @@ const pages = [
     "pages/insight/index",
     "pages/mine/index",
     "pages/login/index",
+    "pages/legal/index",
+    "pages/report/index",
 ] as string[];
 
 // Temporary production self-check page. It is intentionally absent from every
@@ -14,6 +16,7 @@ if (process.env.TARO_ENV === "weapp" && process.env.NODE_ENV !== "production") {
 
 export default defineAppConfig({
   pages,
+  __usePrivacyCheck__: true,
   window: {
     backgroundTextStyle: "light",
     navigationBarBackgroundColor: "#f7f7f7",

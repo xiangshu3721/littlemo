@@ -55,6 +55,7 @@ Short audit of 有点情绪 (littlemo), a local-first companion app. Scope: Next
 - In-memory rate limits (chat 24/min, analyze 8, period 6 per client IP) reset per server instance; they are a brake, not a WAF.
 - Same-origin assumed. A future extra origin needs an explicit allow-list, not `*`.
 - Prompt injection cannot be fully closed while user text is sent to a general model.
+- Mini-program users can delete the cloud account (`DELETE /api/me`); residual logs/backups on CloudBase are outside this app.
 - Local IndexedDB and `localStorage` profile are readable by any script on this origin; XSS on this origin is still game over.
 - No auth: anyone who can reach the deployment can spend the DeepSeek key. Protect the host; do not put the key in the browser.
 - Image compress runs in-page; a hostile huge file is rejected by size, but canvas work still costs a beat.

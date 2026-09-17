@@ -1,4 +1,5 @@
 import Taro from "@tarojs/taro";
+import { LEGAL_BODIES } from "./legal";
 
 /** Ask WeChat to show its official privacy authorization prompt when needed. */
 export function ensurePrivacyAuthorized() {
@@ -35,4 +36,22 @@ export function ensurePrivacyAuthorized() {
       finish(true);
     }
   });
+}
+
+export function showPrivacyFallback() {
+  Taro.showModal({
+    title: "隐私保护指引",
+    content: LEGAL_BODIES.privacy.slice(0, 500),
+    showCancel: false,
+    confirmText: "知道了",
+    confirmColor: "#5f6f52",
+  });
+}
+
+export function openOfficialPrivacy() {
+  if (process.env.TARO_ENV === "weapp" && typeof Taro.openPrivacyContract === "function") {
+    Taro.openPrivacyContract({ fail: showPrivacyFallback });
+    return;
+  }
+  showPrivacyFallback();
 }

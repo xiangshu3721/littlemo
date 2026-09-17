@@ -65,7 +65,8 @@ npm run dev
 
 登录必须来自 CloudBase 已认证请求；服务端据此签发 Littlemo JWT。之后请求带 `Authorization: Bearer <token>`：
 
-- `GET /api/me`；`PATCH /api/me` `{ "avatar": "data:image/jpeg;base64,…" }`（头像 data URL，需登录）
+- `GET /api/me`；`PATCH /api/me` `{ "avatar": "data:image/jpeg;base64,…" }`（头像 data URL，需登录）；`DELETE /api/me` 注销并删除该用户云端数据
+- `POST /api/feedback` `{ "kind": "report"|"complaint", "content": "…" }` 投诉与举报
 - `GET` / `POST` / `PATCH` / `DELETE /api/notes`（`PATCH`/`DELETE` 也可用 `/api/notes/:id`）
 - `GET /api/chat` 历史；`POST /api/chat` `{ "content": "…", "sessionId": "d…", "clientId": "d…" }` 或 `{ "messages": […] }` → DeepSeek 陪伴回复并落库
 - `GET` / `POST /api/diary` 情绪日记段落、归属消息、阶段洞察（登录用户的云端源）

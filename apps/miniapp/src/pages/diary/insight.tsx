@@ -316,7 +316,7 @@ export function PeriodInsight({
 
       {!stats.count ? (
         <Text className="insight__empty">
-          点「就聊到这」把段落收进日记后，这里会帮我从一堆记录里看见规律：不是数我焦虑了几次，而是弄清我的情绪为什么这样发生。
+          点「就聊到这」把段落收进日记后，这里会根据你的记录做人工智能整理，方便回看规律。这不是心理咨询或诊断。
         </Text>
       ) : (
         <View>

@@ -208,11 +208,40 @@
   color: var(--ink-faint);
 }
 
+.mine__list {
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.mine__list .mine__row:first-child {
+  border-radius: 20px 20px 0 0;
+}
+
+.mine__guest-title {
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 18px;
+  color: var(--ink);
+}
+
+.mine__login {
+  margin-top: 16px;
+  width: 140px;
+  height: 40px;
+  border-radius: 999px;
+  background: #5f6f52;
+  color: #ffffff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .mine__hint {
   margin-top: 6px;
   font-size: 11px;
   letter-spacing: 0.04em;
   color: var(--ink-faint);
+  text-align: center;
 }
 
 .mine__row {
@@ -227,10 +256,6 @@
   padding: 0 16px;
   display: flex;
   align-items: center;
-}
-
-.mine__row:first-of-type {
-  border-radius: 20px 20px 0 0;
 }
 
 .mine__row--last {
