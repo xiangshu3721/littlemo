@@ -205,7 +205,7 @@ export default function MinePage() {
     Taro.navigateTo({ url: "/pages/login/index" });
   }
 
-  function openLegal(kind: "terms" | "privacy") {
+  function openLegal(kind: "terms" | "privacy" | "sensitive") {
     Taro.navigateTo({ url: `/pages/legal/index?kind=${kind}` });
   }
 
