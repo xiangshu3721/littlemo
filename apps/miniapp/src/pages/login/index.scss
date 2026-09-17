@@ -66,4 +66,47 @@
   font-size: 11px;
   color: var(--ink-faint);
   letter-spacing: 0.04em;
+  text-align: center;
+  max-width: 260px;
+  line-height: 1.6;
+}
+
+.login__agree {
+  margin-top: 28px;
+  max-width: 280px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.login__check {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 1.4px solid var(--ink-faint);
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.login__check--on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.login__agree-text {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+}
+
+.login__agree-copy {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+}
+
+.login__link {
+  color: var(--accent);
 }

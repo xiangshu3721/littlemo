@@ -13,6 +13,7 @@ import {
   writeLocalProfile,
 } from "../../utils/avatar";
 import { clearSession, getUser, isLoggedIn, saveUser, type SessionUser } from "../../utils/session";
+import { clearLocalUserData } from "../../utils/diary-store";
 import { ensurePrivacyAuthorized } from "../../utils/privacy";
 import { usePageTheme } from "../../utils/theme";
 import "./index.scss";
@@ -25,6 +26,7 @@ export default function MinePage() {
   const [avatarSrc, setAvatarSrc] = useState("");
   const [avatarKey, setAvatarKey] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [authed, setAuthed] = useState(isLoggedIn());
   const savingNameRef = useRef(false);
   const editingNameRef = useRef(false);
   const nativeAvatar = useMemo(() => shouldUseChooseAvatar(), []);
@@ -59,7 +61,7 @@ export default function MinePage() {
       showUser(merged);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        Taro.redirectTo({ url: "/pages/login/index" });
+        setAuthed(false);
       }
     }
   }
@@ -69,10 +71,9 @@ export default function MinePage() {
   }
 
   useDidShow(() => {
-    if (!isLoggedIn()) {
-      Taro.redirectTo({ url: "/pages/login/index" });
-      return;
-    }
+    const ok = isLoggedIn();
+    setAuthed(ok);
+    if (!ok) return;
     showUser(getUser());
     void refreshFromCloud();
   });
@@ -200,6 +201,14 @@ export default function MinePage() {
     });
   }
 
+  function goLogin() {
+    Taro.navigateTo({ url: "/pages/login/index" });
+  }
+
+  function openLegal(kind: "terms" | "privacy") {
+    Taro.navigateTo({ url: `/pages/legal/index?kind=${kind}` });
+  }
+
   function onPrivacy() {
     if (process.env.TARO_ENV === "weapp" && typeof Taro.openPrivacyContract === "function") {
       Taro.openPrivacyContract({ fail: showPrivacyFallback });
@@ -217,63 +226,128 @@ export default function MinePage() {
       success: (res) => {
         if (!res.confirm) return;
         clearSession();
-        Taro.redirectTo({ url: "/pages/login/index" });
+        setAuthed(false);
       },
     });
+  }
+
+  function onDeleteAccount() {
+    Taro.showModal({
+      title: "注销账号",
+      content: "将永久删除云端对话、日记、洞察和资料，且无法恢复。",
+      confirmText: "仍要注销",
+      confirmColor: "#8a4a42",
+      success: (res) => {
+        if (!res.confirm) return;
+        Taro.showModal({
+          title: "确认注销",
+          content: "这是最后一步。注销后同一微信再次进入会是空白账号。",
+          confirmText: "确认注销",
+          confirmColor: "#8a4a42",
+          success: (again) => {
+            if (!again.confirm) return;
+            void deleteAccount();
+          },
+        });
+      },
+    });
+  }
+
+  async function deleteAccount() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const userId = getUser()?.id;
+      await api("/api/me", { method: "DELETE" });
+      if (userId) clearLocalUserData(userId);
+      clearSession();
+      setAuthed(false);
+      Taro.showToast({ title: "已注销", icon: "none" });
+    } catch (err) {
+      const message = err instanceof ApiError || err instanceof Error ? err.message : "账号没注销掉";
+      Taro.showToast({ title: message, icon: "none" });
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
     <View className={`mine ${theme.className}`}>
       <Text className="mine__mark">只陪这一刻</Text>
-      <View className="mine__card">
-        <Button
-          className={`mine__avatar-btn${busy ? " mine__avatar-btn--busy" : ""}`}
-          openType={nativeAvatar ? "chooseAvatar" : undefined}
-          onChooseAvatar={nativeAvatar ? onChooseAvatar : undefined}
-          onClick={nativeAvatar ? undefined : onPickFallback}
-          hoverClass="mine__avatar-btn--hover"
-        >
-          <View className="mine__avatar-wrap">
-            {avatarSrc ? (
-              <Image key={avatarKey} className="mine__avatar" src={avatarSrc} mode="aspectFill" />
-            ) : (
-              <View className="mine__avatar mine__avatar--empty">
-                <Text className="mine__avatar-placeholder">头像</Text>
-              </View>
-            )}
-            <View className="mine__avatar-badge" />
-          </View>
-          <Text className="mine__avatar-hint">{busy ? "在换…" : "点按更换"}</Text>
-        </Button>
-        {editingName ? (
-          <Input
-            className="mine__name-input"
-            type="nickname"
-            focus
-            maxlength={NICKNAME_MAX}
-            value={draftName}
-            placeholder="怎么称呼你"
-            placeholderClass="mine__name-placeholder"
-            confirmType="done"
-            onInput={(e) => setDraftName(String(e.detail.value || "").slice(0, NICKNAME_MAX))}
-            onConfirm={onNameConfirm}
-            onBlur={onNameBlur}
-          />
-        ) : (
-          <View className="mine__name-row" onClick={beginEditName}>
-            <Text className="mine__name">{name}</Text>
-            <Text className="mine__name-edit">改</Text>
-          </View>
-        )}
-        <Text className="mine__hint">点昵称或头像可更换，会保存到账号。</Text>
-      </View>
-      <Button className="mine__row" onClick={onPrivacy}>
-        隐私说明
+      {authed ? (
+        <View className="mine__card">
+          <Button
+            className={`mine__avatar-btn${busy ? " mine__avatar-btn--busy" : ""}`}
+            openType={nativeAvatar ? "chooseAvatar" : undefined}
+            onChooseAvatar={nativeAvatar ? onChooseAvatar : undefined}
+            onClick={nativeAvatar ? undefined : onPickFallback}
+            hoverClass="mine__avatar-btn--hover"
+          >
+            <View className="mine__avatar-wrap">
+              {avatarSrc ? (
+                <Image key={avatarKey} className="mine__avatar" src={avatarSrc} mode="aspectFill" />
+              ) : (
+                <View className="mine__avatar mine__avatar--empty">
+                  <Text className="mine__avatar-placeholder">头像</Text>
+                </View>
+              )}
+              <View className="mine__avatar-badge" />
+            </View>
+            <Text className="mine__avatar-hint">{busy ? "在换…" : "点按更换"}</Text>
+          </Button>
+          {editingName ? (
+            <Input
+              className="mine__name-input"
+              type="nickname"
+              focus
+              maxlength={NICKNAME_MAX}
+              value={draftName}
+              placeholder="怎么称呼你"
+              placeholderClass="mine__name-placeholder"
+              confirmType="done"
+              onInput={(e) => setDraftName(String(e.detail.value || "").slice(0, NICKNAME_MAX))}
+              onConfirm={onNameConfirm}
+              onBlur={onNameBlur}
+            />
+          ) : (
+            <View className="mine__name-row" onClick={beginEditName}>
+              <Text className="mine__name">{name}</Text>
+              <Text className="mine__name-edit">改</Text>
+            </View>
+          )}
+          <Text className="mine__hint">点昵称或头像可更换，会保存到账号。</Text>
+        </View>
+      ) : (
+        <View className="mine__card">
+          <Text className="mine__name">还没进入</Text>
+          <Text className="mine__hint">先浏览日记和洞察也可以。记下心情前请进入并同意协议。</Text>
+          <Button className="mine__login" onClick={goLogin}>
+            进入
+          </Button>
+        </View>
+      )}
+      <Button className="mine__row mine__row--first" onClick={() => openLegal("terms")}>
+        用户协议
       </Button>
-      <Button className="mine__row mine__row--last" onClick={onLogout}>
-        退出登录
+      <Button className="mine__row" onClick={() => openLegal("privacy")}>
+        隐私政策
       </Button>
-      <Text className="mine__foot">昵称与头像可随时改，保存后跟着账号走。点「就聊到这」后，深度洞察会出现在「情绪日记」。日记跟账号存在云端；清掉小程序缓存不会删掉已同步的记录。</Text>
+      <Button className={`mine__row${authed ? "" : " mine__row--last"}`} onClick={onPrivacy}>
+        微信隐私保护指引
+      </Button>
+      {authed ? (
+        <>
+          <Button className="mine__row" onClick={onLogout}>
+            退出登录
+          </Button>
+          <Button className="mine__row mine__row--last mine__row--danger" onClick={onDeleteAccount}>
+            注销账号
+          </Button>
+        </>
+      ) : null}
+      <Text className="mine__foot">
+        这是情绪记录与文字陪伴，不是心理咨询或医疗建议。日记跟账号存在云端；清掉小程序缓存不会删掉已同步的记录。注销账号会永久删除云端数据。
+      </Text>
     </View>
   );
 }

@@ -3,6 +3,7 @@ import { publicError, rateLimit, readJsonBody } from "@/lib/api-guard";
 import { publicUser, requireUser } from "@/lib/auth";
 import { apiJson, preflight, withCors } from "@/lib/cors";
 import { LIMITS, clipText, isSafeImageDataUrl } from "@/lib/limits";
+import { assertUserTextSafe } from "@/lib/wechat-sec";
 
 export function OPTIONS(req: Request) {
   return preflight(req);
@@ -50,6 +51,7 @@ export async function PATCH(req: Request) {
       if (!nickname) {
         return apiJson(req, { error: "昵称不能为空" }, 400);
       }
+      await assertUserTextSafe({ openid: auth.user.openid, content: nickname, scene: 1 });
       data.nickname = nickname;
     }
 
@@ -59,6 +61,22 @@ export async function PATCH(req: Request) {
     });
     return apiJson(req, { user: publicUser(user) });
   } catch (err) {
+    if (err instanceof Error && err.message === "CONTENT_BLOCKED") {
+      return apiJson(req, { error: publicError(err, "这句话过不了内容安全检查，换一种说法。") }, 400);
+    }
     return apiJson(req, { error: publicError(err, "资料没存上") }, 500);
+  }
+}
+
+export async function DELETE(req: Request) {
+  const limited = rateLimit(req, LIMITS.rateAuthPerMin);
+  if (limited) return withCors(req, limited);
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
+  try {
+    await prisma.user.delete({ where: { id: auth.user.id } });
+    return apiJson(req, { ok: true });
+  } catch (err) {
+    return apiJson(req, { error: publicError(err, "账号没注销掉") }, 500);
   }
 }

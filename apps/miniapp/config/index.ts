@@ -28,7 +28,10 @@ export default defineConfig(async (merge) => {
       CLOUDBASE_SERVICE_NAME: cloudbaseServiceName,
     },
     copy: {
-      patterns: [{ from: "src/assets/", to: "assets/" }],
+      patterns: [
+        { from: "src/assets/", to: "assets/" },
+        { from: "src/sitemap.json", to: "sitemap.json" },
+      ],
       options: {},
     },
     framework: "react",
