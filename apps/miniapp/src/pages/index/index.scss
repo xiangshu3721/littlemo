@@ -198,6 +198,17 @@
   text-align: center;
 }
 
+.home__login {
+  margin-top: 24px;
+  width: 140px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14px;
+  letter-spacing: 0.12em;
+}
+
 .bubble {
   display: flex;
   flex-direction: column;

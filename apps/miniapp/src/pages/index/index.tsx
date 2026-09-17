@@ -45,6 +45,7 @@ export default function HomePage() {
   const [closing, setClosing] = useState(false);
   const [canInsight, setCanInsight] = useState(false);
   const [ready, setReady] = useState(false);
+  const [authed, setAuthed] = useState(isLoggedIn());
   const [openPlus, setOpenPlus] = useState(false);
   const [nickname, setNickname] = useState(displayName(getUser()));
   const [tagline, setTagline] = useState(companionTagline());
@@ -85,9 +86,14 @@ export default function HomePage() {
 
   async function load() {
     if (!isLoggedIn()) {
-      Taro.redirectTo({ url: "/pages/login/index" });
+      setAuthed(false);
+      setThread([]);
+      setEndedById({});
+      setCanInsight(false);
+      setReady(true);
       return;
     }
+    setAuthed(true);
     syncProfile(getUser());
     try {
       const meRes = await api<{ user: SessionUser }>("/api/me").catch(() => null);
@@ -100,7 +106,11 @@ export default function HomePage() {
       void resumePendingAnalysis();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        Taro.redirectTo({ url: "/pages/login/index" });
+        setAuthed(false);
+        setThread([]);
+        setEndedById({});
+        setCanInsight(false);
+        setReady(true);
         return;
       }
       Taro.showToast({
@@ -117,7 +127,18 @@ export default function HomePage() {
     void load();
   });
 
+  function goLogin() {
+    Taro.navigateTo({ url: "/pages/login/index" });
+  }
+
+  function requireAuth() {
+    if (isLoggedIn()) return true;
+    goLogin();
+    return false;
+  }
+
   async function send() {
+    if (!requireAuth()) return;
     const content = draft.trim();
     if ((!content && !image) || busy) return;
     const sendingImage = image;
@@ -175,6 +196,7 @@ export default function HomePage() {
   }
 
   async function closeAndInsight() {
+    if (!requireAuth()) return;
     if (!canInsight || closing || busy) return;
     setClosing(true);
     try {
@@ -191,7 +213,7 @@ export default function HomePage() {
   }
 
   async function onPickImage() {
-    if (busy) return;
+    if (!requireAuth() || busy) return;
     setOpenPlus(false);
     try {
       const path = await pickChatImage();
@@ -268,7 +290,16 @@ export default function HomePage() {
           <View className="home__empty">
             <View className="home__seal" />
             <Text className="home__empty-title">去记下这一刻</Text>
-            <Text className="home__empty-body">繁华之外的心灵净土，让灵魂慢一点，让烦恼少一些</Text>
+            <Text className="home__empty-body">
+              {authed
+                ? "想说就说。这是情绪记录与文字陪伴，不是心理咨询或医疗建议。"
+                : "可以先看看日记和洞察。进入后即可记下这一刻。"}
+            </Text>
+            {authed ? null : (
+              <Button className="home__login" onClick={goLogin}>
+                进入
+              </Button>
+            )}
           </View>
         ) : (
           bubbles.map((bubble, index) => {

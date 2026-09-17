@@ -18,6 +18,7 @@ import { replyTurn } from "@/lib/deepseek";
 import { LIMITS, clipText } from "@/lib/limits";
 import type { ChatLine, GuideContext, MemoryPack } from "@/lib/types";
 import { toDay } from "@/lib/dates";
+import { assertUserTextSafe } from "@/lib/wechat-sec";
 
 export const PUT = methodNotAllowed;
 export const DELETE = methodNotAllowed;
@@ -119,6 +120,7 @@ async function companionPost(
       return apiJson(req, { error: "先写一点，或附一张图。" }, 400);
     }
     const content = spoken || "（图片）";
+    if (spoken) await assertUserTextSafe({ openid: auth.user.openid, content: spoken, scene: 2 });
     const clientId = asClientId(data.clientId) || null;
     const sessionId = asClientId(data.sessionId);
     const now = new Date();
@@ -207,6 +209,9 @@ async function companionPost(
   } catch (err) {
     if (err instanceof Error && err.message === "SESSION_TAKEN") {
       return apiJson(req, { error: "段落冲突。" }, 409);
+    }
+    if (err instanceof Error && err.message === "CONTENT_BLOCKED") {
+      return apiJson(req, { error: publicError(err, "这句话过不了内容安全检查，换一种说法。") }, 400);
     }
     return apiJson(req, { error: publicError(err, "没接上") }, 500);
   }

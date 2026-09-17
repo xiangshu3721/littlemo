@@ -1,0 +1,49 @@
+.legal {
+  --desk: #e8e8e6;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #999999;
+  --accent: #5f6f52;
+  min-height: 100vh;
+  padding: 20px 22px 48px;
+  background: var(--desk);
+  color: var(--ink);
+}
+
+.legal.theme-dark {
+  --desk: #050505;
+  --ink: #f5f1e6;
+  --ink-soft: #d8cbb6;
+  --ink-faint: #c4a574;
+  --accent: #c4a574;
+}
+
+.legal__title {
+  display: block;
+  font-family: "Songti SC", "Noto Serif SC", "STSong", "Source Han Serif SC", serif;
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+}
+
+.legal__p {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-soft);
+}
+
+.legal__btn {
+  margin-top: 8px;
+  width: 100%;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+}
+
+.theme-dark .legal__btn {
+  color: #0a0a0a;
+}

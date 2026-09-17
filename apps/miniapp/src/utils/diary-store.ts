@@ -72,6 +72,17 @@ export function loadDiary(userId = currentUserId()): DiaryBundle {
   return next;
 }
 
+export function clearLocalUserData(userId = currentUserId()) {
+  try {
+    Taro.removeStorageSync(storageKey(userId));
+    Taro.removeStorageSync("littlemo.profile");
+  } catch {
+    /* ignore */
+  }
+  cache = cloneBundle(EMPTY);
+  cacheUser = "";
+}
+
 function persist(mutator: (bundle: DiaryBundle) => void, userId = currentUserId()) {
   write = write.then(() => {
     const bundle = loadDiary(userId);
