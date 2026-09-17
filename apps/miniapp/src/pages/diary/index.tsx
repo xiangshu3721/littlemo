@@ -1,8 +1,10 @@
 import { View, Text, Button, ScrollView } from "@tarojs/components";
+import Taro from "@tarojs/taro";
 import { useMemo, useState } from "react";
 import { daysInMonth, startOfWeek, toDay } from "../../utils/diary-dates";
 import { moodById } from "../../utils/diary-moods";
 import type { MoodId } from "../../utils/diary-types";
+import { isLoggedIn } from "../../utils/session";
 import { usePageTheme } from "../../utils/theme";
 import { useLiveDiary } from "../../utils/use-live-diary";
 import { SessionDigest } from "./digest";
@@ -71,6 +73,11 @@ export default function DiaryPage() {
   return (
     <View className={`diary ${theme.className}`}>
       <ScrollView className="diary__feed" scrollY>
+        {!isLoggedIn() ? (
+          <View className="guest-banner" onClick={() => Taro.navigateTo({ url: "/pages/login/index" })}>
+            <Text className="guest-banner__text">登录后，日历里会显示你账号里已记下的段落。</Text>
+          </View>
+        ) : null}
         <View className="cal__nav">
           <Button
             className="cal__arrow"

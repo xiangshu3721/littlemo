@@ -102,3 +102,14 @@ model PeriodReport {
   @@unique([userId, periodId])
   @@index([userId, generatedAt])
 }
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String?
+  kind      String
+  content   String
+  target    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

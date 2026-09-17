@@ -23,7 +23,8 @@ import {
 } from "../../utils/diary-store";
 import type { Message } from "../../utils/diary-types";
 import { pickChatImage, isPickCancel } from "../../utils/image";
-import { getToken, getUser, isLoggedIn, saveSession, type SessionUser } from "../../utils/session";
+import { getToken, getUser, isLoggedIn, requireLogin, saveSession, type SessionUser } from "../../utils/session";
+import { AI_NOTICE, DISCLAIMER_SHORT } from "../../utils/legal";
 import { customNavInset, usePageTheme } from "../../utils/theme";
 import "./index.scss";
 
@@ -47,6 +48,7 @@ export default function HomePage() {
   const [ready, setReady] = useState(false);
   const [openPlus, setOpenPlus] = useState(false);
   const [nickname, setNickname] = useState(displayName(getUser()));
+  const [guest, setGuest] = useState(!isLoggedIn());
   const [tagline, setTagline] = useState(companionTagline());
   const [face, setFace] = useState(avatarSrc(getUser()));
   const [inset, setInset] = useState(customNavInset);
@@ -84,8 +86,11 @@ export default function HomePage() {
   }
 
   async function load() {
+    setGuest(!isLoggedIn());
     if (!isLoggedIn()) {
-      Taro.redirectTo({ url: "/pages/login/index" });
+      syncProfile(null);
+      syncLocal();
+      setReady(true);
       return;
     }
     syncProfile(getUser());
@@ -100,7 +105,10 @@ export default function HomePage() {
       void resumePendingAnalysis();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        Taro.redirectTo({ url: "/pages/login/index" });
+        setGuest(true);
+        syncProfile(null);
+        syncLocal();
+        setReady(true);
         return;
       }
       Taro.showToast({
@@ -120,6 +128,7 @@ export default function HomePage() {
   async function send() {
     const content = draft.trim();
     if ((!content && !image) || busy) return;
+    if (!(await requireLogin("登录后才能把这一刻记到你的账号，并得到陪伴回复。"))) return;
     const sendingImage = image;
     setBusy(true);
     setPending(true);
@@ -176,6 +185,7 @@ export default function HomePage() {
 
   async function closeAndInsight() {
     if (!canInsight || closing || busy) return;
+    if (!(await requireLogin("登录后才能生成深度洞察并收进日记。"))) return;
     setClosing(true);
     try {
       await requestInsight();
@@ -192,6 +202,7 @@ export default function HomePage() {
 
   async function onPickImage() {
     if (busy) return;
+    if (!(await requireLogin("登录后才能把照片放进这一刻的对话。"))) return;
     setOpenPlus(false);
     try {
       const path = await pickChatImage();
@@ -244,8 +255,8 @@ export default function HomePage() {
             )}
           </View>
           <View className="home__who-copy">
-            <Text className="home__name">{nickname}</Text>
-            <Text className="home__tagline">{tagline}</Text>
+            <Text className="home__name">{guest ? "未登录" : nickname}</Text>
+            <Text className="home__tagline">{guest ? "先看看，登录后再记下" : tagline}</Text>
           </View>
         </View>
         <View
@@ -268,7 +279,15 @@ export default function HomePage() {
           <View className="home__empty">
             <View className="home__seal" />
             <Text className="home__empty-title">去记下这一刻</Text>
-            <Text className="home__empty-body">繁华之外的心灵净土，让灵魂慢一点，让烦恼少一些</Text>
+            <Text className="home__empty-body">
+              {guest ? "未登录也可以先看页面。登录后，文字会记到你的账号，回复由人工智能生成。" : "想说就说。点「就聊到这」后，这段会收进情绪日记。"}
+            </Text>
+            <Text className="home__empty-note">{DISCLAIMER_SHORT}</Text>
+            {guest ? (
+              <Button className="home__login" onClick={() => Taro.navigateTo({ url: "/pages/login/index" })}>
+                登录后开始
+              </Button>
+            ) : null}
           </View>
         ) : (
           bubbles.map((bubble, index) => {
@@ -292,7 +311,10 @@ export default function HomePage() {
                       ) : null}
                       {bubble.text ? <Text className="bubble__text">{bubble.text}</Text> : null}
                     </View>
-                    <Text className="bubble__time">{bubble.pending ? "" : clock(bubble.createdAt)}</Text>
+                    <Text className="bubble__time">
+                      {bubble.pending ? "" : clock(bubble.createdAt)}
+                      {!bubble.pending && bubble.role === "assistant" ? " · AI 生成" : ""}
+                    </Text>
                   </View>
                 )}
                 {archived ? (
@@ -354,6 +376,7 @@ export default function HomePage() {
             <View className="glyph glyph--send" />
           </Button>
         </View>
+        <Text className="home__ai-note">{AI_NOTICE}</Text>
       </View>
     </View>
   );

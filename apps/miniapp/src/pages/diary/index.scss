@@ -19,6 +19,28 @@
   border-bottom: 1px solid #e5e5e5;
 }
 
+.guest-banner {
+  margin: 8px 0 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #f7f7f7;
+  border: 1px solid #e5e5e5;
+}
+
+.guest-banner__text {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #4a4a4a;
+}
+
+.insight__ai {
+  display: block;
+  margin: 8px 0 4px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #999999;
+}
+
 .tabs__btn {
   height: 32px;
   padding: 0 14px;
@@ -759,9 +781,14 @@
   color: #d8cbb6;
 }
 
-.diary.theme-dark .tabs__btn--on {
-  background: #c4a574;
-  color: #0a0a0a;
+.diary.theme-dark .guest-banner {
+  background: #0c0c0c;
+  border-color: #c4a574;
+}
+
+.diary.theme-dark .guest-banner__text,
+.diary.theme-dark .insight__ai {
+  color: #d8cbb6;
 }
 
 .diary.theme-dark .cal__title,

@@ -1,0 +1,74 @@
+.report {
+  --desk: #e8e8e6;
+  --surface: #ffffff;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --line: #e5e5e5;
+  --accent: #5f6f52;
+  min-height: 100vh;
+  padding: 20px 20px 48px;
+  background: var(--desk);
+}
+
+.report.theme-dark {
+  --desk: #050505;
+  --surface: #0c0c0c;
+  --ink: #f5f1e6;
+  --ink-soft: #d8cbb6;
+  --line: #c4a574;
+  --accent: #c4a574;
+}
+
+.report__lead {
+  display: block;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+
+.report__kinds {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.report__kind {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
+.report__kind--on {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.report__input {
+  width: 100%;
+  min-height: 160px;
+  padding: 14px;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.report__submit {
+  margin-top: 24px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

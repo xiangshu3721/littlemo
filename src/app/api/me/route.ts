@@ -20,6 +20,19 @@ export async function GET(req: Request) {
   }
 }
 
+export async function DELETE(req: Request) {
+  const limited = rateLimit(req, LIMITS.rateAuthPerMin);
+  if (limited) return withCors(req, limited);
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
+  try {
+    await prisma.user.delete({ where: { id: auth.user.id } });
+    return apiJson(req, { ok: true });
+  } catch (err) {
+    return apiJson(req, { error: publicError(err, "账号没注销掉") }, 500);
+  }
+}
+
 export async function PATCH(req: Request) {
   const limited = rateLimit(req, LIMITS.rateAuthPerMin);
   if (limited) return withCors(req, limited);

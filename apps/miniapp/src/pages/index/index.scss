@@ -191,11 +191,33 @@
 
 .home__empty-body {
   margin-top: 12px;
-  max-width: 220px;
+  max-width: 260px;
   font-size: 14px;
   line-height: 1.8;
   color: var(--ink-soft);
   text-align: center;
+}
+
+.home__empty-note {
+  margin-top: 14px;
+  max-width: 280px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+.home__login {
+  margin-top: 20px;
+  width: 160px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bubble {
@@ -335,6 +357,14 @@
   display: flex;
   align-items: flex-end;
   gap: 8px;
+}
+
+.home__ai-note {
+  display: block;
+  margin-top: 8px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--ink-faint);
 }
 
 .home__input {

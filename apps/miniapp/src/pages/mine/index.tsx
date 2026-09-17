@@ -12,13 +12,15 @@ import {
   shouldUseChooseAvatar,
   writeLocalProfile,
 } from "../../utils/avatar";
-import { clearSession, getUser, isLoggedIn, saveUser, type SessionUser } from "../../utils/session";
-import { ensurePrivacyAuthorized } from "../../utils/privacy";
+import { DISCLAIMER_SHORT } from "../../utils/legal";
+import { ensurePrivacyAuthorized, openOfficialPrivacy } from "../../utils/privacy";
+import { clearSession, getUser, goLogin, isLoggedIn, saveUser, type SessionUser } from "../../utils/session";
 import { usePageTheme } from "../../utils/theme";
 import "./index.scss";
 
 export default function MinePage() {
   const theme = usePageTheme();
+  const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [name, setName] = useState(displayName(getUser()));
   const [draftName, setDraftName] = useState(displayName(getUser()));
   const [editingName, setEditingName] = useState(false);
@@ -59,7 +61,7 @@ export default function MinePage() {
       showUser(merged);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        Taro.redirectTo({ url: "/pages/login/index" });
+        setLoggedIn(false);
       }
     }
   }
@@ -69,8 +71,11 @@ export default function MinePage() {
   }
 
   useDidShow(() => {
-    if (!isLoggedIn()) {
-      Taro.redirectTo({ url: "/pages/login/index" });
+    const ok = isLoggedIn();
+    setLoggedIn(ok);
+    if (!ok) {
+      setName("未登录");
+      setAvatarSrc("");
       return;
     }
     showUser(getUser());
@@ -111,6 +116,7 @@ export default function MinePage() {
   async function onPickFallback() {
     if (nativeAvatar || busy) return;
     try {
+      if (!(await ensurePrivacyAuthorized())) return;
       const res = await Taro.chooseImage({
         count: 1,
         sizeType: ["compressed"],
@@ -190,22 +196,8 @@ export default function MinePage() {
     void persistNickname(draftName);
   }
 
-  function showPrivacyFallback() {
-    Taro.showModal({
-      title: "隐私",
-      content: "陪伴对话、情绪日记和深度洞察都会记在你的账号里。清掉这台设备上的小程序缓存，云端记录还在；重新登录后会再同步下来。分析密钥只放在服务器。照片留在本机，发给倾听者的只有「附了一张图」。",
-      showCancel: false,
-      confirmText: "知道了",
-      confirmColor: "#5f6f52",
-    });
-  }
-
-  function onPrivacy() {
-    if (process.env.TARO_ENV === "weapp" && typeof Taro.openPrivacyContract === "function") {
-      Taro.openPrivacyContract({ fail: showPrivacyFallback });
-      return;
-    }
-    showPrivacyFallback();
+  function openLegal(topic: "terms" | "disclaimer") {
+    Taro.navigateTo({ url: `/pages/legal/index?topic=${topic}` });
   }
 
   function onLogout() {
@@ -217,63 +209,120 @@ export default function MinePage() {
       success: (res) => {
         if (!res.confirm) return;
         clearSession();
-        Taro.redirectTo({ url: "/pages/login/index" });
+        setLoggedIn(false);
+        setName("未登录");
+        setAvatarSrc("");
+      },
+    });
+  }
+
+  function onDeleteAccount() {
+    Taro.showModal({
+      title: "注销账号",
+      content: "将永久删除云端对话、日记、头像和昵称，且无法恢复。",
+      confirmText: "注销",
+      confirmColor: "#8a4a42",
+      success: async (res) => {
+        if (!res.confirm) return;
+        try {
+          await api("/api/me", { method: "DELETE" });
+          clearSession();
+          setLoggedIn(false);
+          setName("未登录");
+          setAvatarSrc("");
+          Taro.showToast({ title: "已注销", icon: "none" });
+        } catch (err) {
+          Taro.showToast({
+            title: err instanceof ApiError ? err.message : "注销没完成",
+            icon: "none",
+          });
+        }
       },
     });
   }
 
   return (
     <View className={`mine ${theme.className}`}>
-      <Text className="mine__mark">只陪这一刻</Text>
+      <Text className="mine__mark">只记下这一刻</Text>
       <View className="mine__card">
-        <Button
-          className={`mine__avatar-btn${busy ? " mine__avatar-btn--busy" : ""}`}
-          openType={nativeAvatar ? "chooseAvatar" : undefined}
-          onChooseAvatar={nativeAvatar ? onChooseAvatar : undefined}
-          onClick={nativeAvatar ? undefined : onPickFallback}
-          hoverClass="mine__avatar-btn--hover"
-        >
-          <View className="mine__avatar-wrap">
-            {avatarSrc ? (
-              <Image key={avatarKey} className="mine__avatar" src={avatarSrc} mode="aspectFill" />
+        {loggedIn ? (
+          <>
+            <Button
+              className={`mine__avatar-btn${busy ? " mine__avatar-btn--busy" : ""}`}
+              openType={nativeAvatar ? "chooseAvatar" : undefined}
+              onChooseAvatar={nativeAvatar ? onChooseAvatar : undefined}
+              onClick={nativeAvatar ? undefined : onPickFallback}
+              hoverClass="mine__avatar-btn--hover"
+            >
+              <View className="mine__avatar-wrap">
+                {avatarSrc ? (
+                  <Image key={avatarKey} className="mine__avatar" src={avatarSrc} mode="aspectFill" />
+                ) : (
+                  <View className="mine__avatar mine__avatar--empty">
+                    <Text className="mine__avatar-placeholder">头像</Text>
+                  </View>
+                )}
+                <View className="mine__avatar-badge" />
+              </View>
+              <Text className="mine__avatar-hint">{busy ? "在换…" : "点按更换"}</Text>
+            </Button>
+            {editingName ? (
+              <Input
+                className="mine__name-input"
+                type="nickname"
+                focus
+                maxlength={NICKNAME_MAX}
+                value={draftName}
+                placeholder="怎么称呼你"
+                placeholderClass="mine__name-placeholder"
+                confirmType="done"
+                onInput={(e) => setDraftName(String(e.detail.value || "").slice(0, NICKNAME_MAX))}
+                onConfirm={onNameConfirm}
+                onBlur={onNameBlur}
+              />
             ) : (
-              <View className="mine__avatar mine__avatar--empty">
-                <Text className="mine__avatar-placeholder">头像</Text>
+              <View className="mine__name-row" onClick={beginEditName}>
+                <Text className="mine__name">{name}</Text>
+                <Text className="mine__name-edit">改</Text>
               </View>
             )}
-            <View className="mine__avatar-badge" />
-          </View>
-          <Text className="mine__avatar-hint">{busy ? "在换…" : "点按更换"}</Text>
-        </Button>
-        {editingName ? (
-          <Input
-            className="mine__name-input"
-            type="nickname"
-            focus
-            maxlength={NICKNAME_MAX}
-            value={draftName}
-            placeholder="怎么称呼你"
-            placeholderClass="mine__name-placeholder"
-            confirmType="done"
-            onInput={(e) => setDraftName(String(e.detail.value || "").slice(0, NICKNAME_MAX))}
-            onConfirm={onNameConfirm}
-            onBlur={onNameBlur}
-          />
+            <Text className="mine__hint">点昵称或头像可更换，会保存到账号。</Text>
+          </>
         ) : (
-          <View className="mine__name-row" onClick={beginEditName}>
-            <Text className="mine__name">{name}</Text>
-            <Text className="mine__name-edit">改</Text>
-          </View>
+          <>
+            <Text className="mine__guest-title">还没有登录</Text>
+            <Text className="mine__hint">先看看页面也可以。登录后才会把对话和日记同步到云端。</Text>
+            <Button className="mine__login" onClick={goLogin}>
+              去登录
+            </Button>
+          </>
         )}
-        <Text className="mine__hint">点昵称或头像可更换，会保存到账号。</Text>
       </View>
-      <Button className="mine__row" onClick={onPrivacy}>
-        隐私说明
-      </Button>
-      <Button className="mine__row mine__row--last" onClick={onLogout}>
-        退出登录
-      </Button>
-      <Text className="mine__foot">昵称与头像可随时改，保存后跟着账号走。点「就聊到这」后，深度洞察会出现在「情绪日记」。日记跟账号存在云端；清掉小程序缓存不会删掉已同步的记录。</Text>
+      <View className="mine__list">
+        <Button className="mine__row" onClick={() => openLegal("terms")}>
+          用户协议
+        </Button>
+        <Button className="mine__row" onClick={openOfficialPrivacy}>
+          隐私保护指引
+        </Button>
+        <Button className="mine__row" onClick={() => openLegal("disclaimer")}>
+          使用说明
+        </Button>
+        <Button className={`mine__row${loggedIn ? "" : " mine__row--last"}`} onClick={() => Taro.navigateTo({ url: "/pages/report/index" })}>
+          投诉与反馈
+        </Button>
+        {loggedIn ? (
+          <Button className="mine__row" onClick={onLogout}>
+            退出登录
+          </Button>
+        ) : null}
+        {loggedIn ? (
+          <Button className="mine__row mine__row--last" onClick={onDeleteAccount}>
+            注销账号
+          </Button>
+        ) : null}
+      </View>
+      <Text className="mine__foot">{DISCLAIMER_SHORT}</Text>
     </View>
   );
 }
