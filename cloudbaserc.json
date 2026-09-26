@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "envId": "YOUR_CLOUDBASE_ENV_ID",
+  "envId": "littlemo-d2gy2ec0dd102163",
   "framework": {
     "name": "littlemo",
     "plugins": {
@@ -14,9 +14,10 @@
           "containerPort": 3000,
           "uploadType": "package",
           "envVariables": {
-            "NODE_ENV": "production",
-            "PORT": "3000",
-            "CLOUDBASE_SERVICE_NAME": "littlemo-api"
+          "NODE_ENV": "production",
+          "PORT": "3000",
+          "CLOUDBASE_ENV_ID": "littlemo-d2gy2ec0dd102163",
+          "CLOUDBASE_SERVICE_NAME": "littlemo-api"
           }
         }
       }

@@ -35,6 +35,11 @@ let cache: DiaryBundle = EMPTY;
 let cacheUser = "";
 let write: Promise<void> = Promise.resolve();
 
+export function clearDiaryCache() {
+  cache = cloneBundle(EMPTY);
+  cacheUser = "";
+}
+
 function cloneBundle(bundle: DiaryBundle): DiaryBundle {
   return {
     sessions: bundle.sessions.map((s) => ({ ...s })),

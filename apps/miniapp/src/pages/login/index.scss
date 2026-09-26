@@ -22,13 +22,10 @@
   --accent-ink: #0a0a0a;
 }
 
-.login__mark {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 1.4px solid var(--ink-faint);
-  opacity: 0.7;
-  margin-bottom: 28px;
+.login__logo {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 20px;
 }
 
 .login__title {
@@ -61,9 +58,45 @@
   justify-content: center;
 }
 
-.login__hint {
-  margin-top: 20px;
-  font-size: 11px;
+.login__agreements {
+  margin-top: 18px;
+  max-width: 280px;
+}
+
+.login__agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 2px 0;
+}
+
+.login__check {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  margin-top: 1px;
+  border: 1px solid var(--ink-faint);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-ink);
+  font-size: 9px;
+  line-height: 1;
+}
+
+.login__check--checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.login__agreement-copy {
+  font-size: 10px;
+  line-height: 1.6;
   color: var(--ink-faint);
-  letter-spacing: 0.04em;
+}
+
+.login__link {
+  color: var(--accent);
 }

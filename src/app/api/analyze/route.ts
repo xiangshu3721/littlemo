@@ -1,5 +1,5 @@
 import { clipTranscript, methodNotAllowed, publicError, rateLimit, readJsonBody } from "@/lib/api-guard";
-import { readBearer, requireUser } from "@/lib/auth";
+import { hasCurrentAiDataConsent, readBearer, requireUser } from "@/lib/auth";
 import { apiJson, preflight, withCors } from "@/lib/cors";
 import { analyzeSession } from "@/lib/deepseek";
 import { asClientId, saveSessionAnalysis, saveSessionStatus } from "@/lib/diary-cloud";
@@ -34,6 +34,9 @@ export async function POST(req: Request) {
     if (authed) {
       const auth = await requireUser(req);
       if (!auth.ok) return auth.response;
+      if (!hasCurrentAiDataConsent(auth.user)) {
+        return apiJson(req, { error: "请先阅读并同意 AI 数据处理说明。" }, 403);
+      }
       userId = auth.user.id;
       if (sessionId) {
         await saveSessionStatus(userId, sessionId, { analysisStatus: "pending", analysisError: null });

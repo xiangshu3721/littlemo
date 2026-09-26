@@ -111,6 +111,13 @@
   max-width: 100%;
 }
 
+.home__ai-label {
+  margin-top: 1px;
+  color: var(--ink-faint);
+  font-size: 9px;
+  line-height: 12px;
+}
+
 .home__theme {
   width: 32px;
   height: 32px;
@@ -253,6 +260,13 @@
   white-space: pre-wrap;
 }
 
+.bubble__ai-label {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink-faint);
+  font-size: 10px;
+}
+
 .bubble__time {
   margin-top: 4px;
   max-width: 100%;
@@ -265,6 +279,14 @@
 .home__composer {
   padding: 8px 12px 18px;
   background: var(--paper);
+}
+
+.home__ai-note {
+  display: block;
+  padding: 0 4px 6px;
+  color: var(--ink-faint);
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .home__close {

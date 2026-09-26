@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text -- Taro Image has no cross-platform alt prop. */
 import { View, Text, Textarea, Button, ScrollView, Image } from "@tarojs/components";
-import Taro, { useDidShow } from "@tarojs/taro";
-import { useMemo, useState } from "react";
+import Taro, { useDidHide, useDidShow } from "@tarojs/taro";
+import { useMemo, useRef, useState } from "react";
 import { api, ApiError } from "../../utils/api";
 import {
   avatarInitial,
@@ -24,6 +24,7 @@ import {
 import type { Message } from "../../utils/diary-types";
 import { pickChatImage, isPickCancel } from "../../utils/image";
 import { getToken, getUser, isLoggedIn, saveSession, type SessionUser } from "../../utils/session";
+import { AI_DATA_CONSENT_VERSION } from "../../utils/legal-versions";
 import { customNavInset, usePageTheme } from "../../utils/theme";
 import "./index.scss";
 
@@ -50,6 +51,9 @@ export default function HomePage() {
   const [tagline, setTagline] = useState(companionTagline());
   const [face, setFace] = useState(avatarSrc(getUser()));
   const [inset, setInset] = useState(customNavInset);
+  const activeSinceRef = useRef<number | null>(null);
+  const activeDurationRef = useRef(0);
+  const reminderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bubbles = useMemo(() => {
     const list = [...thread];
@@ -83,6 +87,28 @@ export default function HomePage() {
     setCanInsight(Boolean(openTalkSession()));
   }
 
+  function scheduleUseReminder() {
+    if (reminderTimerRef.current) clearTimeout(reminderTimerRef.current);
+    const visibleSince = activeSinceRef.current;
+    if (visibleSince === null) return;
+    const elapsed = activeDurationRef.current + (Date.now() - visibleSince);
+    const remaining = Math.max(0, 2 * 60 * 60 * 1000 - elapsed);
+    reminderTimerRef.current = setTimeout(() => {
+      activeDurationRef.current = 0;
+      activeSinceRef.current = Date.now();
+      Taro.showModal({
+        title: "使用时间提醒",
+        content: "你已连续使用本服务达到两小时。回复由 AI 生成，可以先休息一下。",
+        confirmText: "离开聊天",
+        cancelText: "继续使用",
+        success: (result) => {
+          if (result.confirm) Taro.switchTab({ url: "/pages/diary/index" });
+        },
+      });
+      scheduleUseReminder();
+    }, remaining);
+  }
+
   async function load() {
     if (!isLoggedIn()) {
       Taro.redirectTo({ url: "/pages/login/index" });
@@ -114,12 +140,27 @@ export default function HomePage() {
 
   useDidShow(() => {
     setInset(customNavInset());
+    activeSinceRef.current = Date.now();
+    scheduleUseReminder();
     void load();
+  });
+
+  useDidHide(() => {
+    if (reminderTimerRef.current) clearTimeout(reminderTimerRef.current);
+    reminderTimerRef.current = null;
+    if (activeSinceRef.current !== null) {
+      activeDurationRef.current += Date.now() - activeSinceRef.current;
+      activeSinceRef.current = null;
+    }
   });
 
   async function send() {
     const content = draft.trim();
     if ((!content && !image) || busy) return;
+    if (getUser()?.aiDataConsentVersion !== AI_DATA_CONSENT_VERSION) {
+      Taro.navigateTo({ url: "/pages/legal/index?type=ai&consent=1" });
+      return;
+    }
     const sendingImage = image;
     setBusy(true);
     setPending(true);
@@ -246,6 +287,7 @@ export default function HomePage() {
           <View className="home__who-copy">
             <Text className="home__name">{nickname}</Text>
             <Text className="home__tagline">{tagline}</Text>
+            <Text className="home__ai-label">你正在与 AI 互动</Text>
           </View>
         </View>
         <View
@@ -292,6 +334,9 @@ export default function HomePage() {
                       ) : null}
                       {bubble.text ? <Text className="bubble__text">{bubble.text}</Text> : null}
                     </View>
+                    {bubble.role === "assistant" && !bubble.pending ? (
+                      <Text className="bubble__ai-label">AI 生成</Text>
+                    ) : null}
                     <Text className="bubble__time">{bubble.pending ? "" : clock(bubble.createdAt)}</Text>
                   </View>
                 )}
@@ -304,6 +349,7 @@ export default function HomePage() {
         )}
       </ScrollView>
       <View className="home__composer">
+        <Text className="home__ai-note">AI 生成内容，不是真人服务。回复可能出错，不替代专业帮助。</Text>
         {canInsight ? (
           <Button
             className="home__close"

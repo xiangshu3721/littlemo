@@ -254,6 +254,25 @@ dialog[open] .drawer-panel {
   transition: transform 160ms var(--ease), background-color 160ms ease, color 160ms ease;
 }
 
+.mic-live {
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mic-live {
+    animation: mic-pulse 1.6s var(--ease) infinite;
+  }
+}
+
+@keyframes mic-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
 .feed-scroll {
   scrollbar-gutter: stable;
 }
@@ -277,6 +296,7 @@ dialog[open] .drawer-panel {
   .drawer-panel,
   dialog[open] .drawer-panel,
   .send-pop,
+  .mic-live,
   .btn-accent {
     animation: none;
     transition: none;

@@ -1,0 +1,4 @@
+export const TERMS_VERSION = "2026-09-13";
+export const PRIVACY_VERSION = "2026-09-13";
+export const SENSITIVE_INFO_CONSENT_VERSION = "2026-09-13";
+export const AI_DATA_CONSENT_VERSION = "2026-09-13";

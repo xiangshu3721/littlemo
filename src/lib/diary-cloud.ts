@@ -1,4 +1,4 @@
-import { prisma, type ChatMessage, type DiarySession, type PeriodReport, type Prisma } from "@littlemo/db";
+import { prisma, type ChatMessage, type DiarySession, type PeriodReport, type Prisma } from "@/lib/data-store";
 import { asPeriodKind } from "@/lib/api-guard";
 import { toDay } from "@/lib/dates";
 import { LIMITS, clipStringList, clipText } from "@/lib/limits";

@@ -4,7 +4,12 @@ import Taro from "@tarojs/taro";
 export function ensurePrivacyAuthorized() {
   if (process.env.TARO_ENV !== "weapp") return Promise.resolve(true);
   if (typeof Taro.getPrivacySetting !== "function" || typeof Taro.requirePrivacyAuthorize !== "function") {
-    return Promise.resolve(true);
+    Taro.showModal({
+      title: "需要微信隐私授权",
+      content: "当前微信版本暂不支持隐私授权流程。请更新微信后重试。",
+      showCancel: false,
+    });
+    return Promise.resolve(false);
   }
 
   return new Promise<boolean>((resolve) => {
@@ -27,12 +32,14 @@ export function ensurePrivacyAuthorized() {
             fail: () => finish(false),
           });
         },
-        // Older base libraries may not expose the privacy API. Let the
-        // underlying image API keep its native behavior in that case.
-        fail: () => finish(true),
+        fail: () => {
+          Taro.showToast({ title: "隐私授权状态暂时无法确认。", icon: "none" });
+          finish(false);
+        },
       });
     } catch {
-      finish(true);
+      Taro.showToast({ title: "隐私授权状态暂时无法确认。", icon: "none" });
+      finish(false);
     }
   });
 }

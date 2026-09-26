@@ -37,7 +37,7 @@ async function chatJson(
   if (!key) {
     throw new Error("NO_KEY");
   }
-  const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
+  const model = process.env.DEEPSEEK_MODEL || "deepseek-flash";
   const res = await fetch(`${BASE}/chat/completions`, {
     method: "POST",
     headers: {
