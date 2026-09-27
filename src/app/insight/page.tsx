@@ -11,6 +11,7 @@ import {
   TrendChart,
 } from "@/components/InsightCharts";
 import { useStore } from "@/context/store";
+import { postApi } from "@/lib/client-api";
 import { periodBox, previousBox } from "@/lib/dates";
 import { buildPeriodStats, kindLabel, sessionsInRange, toPayload } from "@/lib/period-stats";
 import type { PeriodKind, PeriodReport, PeriodTrigger } from "@/lib/types";
@@ -73,21 +74,15 @@ export default function InsightPage() {
             if (rich && cached.generatedAt >= latestEnd) return;
           }
         }
-        const res = await fetch("/api/period", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            kind,
-            label: period.label,
-            digest: stats.digest,
-            entries: toPayload(currentSessions, liveMessages),
-          }),
-        });
-        const data = (await res.json()) as {
+        const data = await postApi<{
           report?: Omit<PeriodReport, "id" | "kind" | "label" | "generatedAt">;
           error?: string;
-        };
-        if (!res.ok) throw new Error(data.error || "分析失败");
+        }>("/api/period", {
+          kind,
+          label: period.label,
+          digest: stats.digest,
+          entries: toPayload(currentSessions, liveMessages),
+        });
         const next: PeriodReport = {
           id: period.id,
           kind,
