@@ -5,7 +5,15 @@ import type { Message } from "@/lib/types";
 import { formatClock } from "@/lib/dates";
 import { useStore } from "@/context/store";
 
-export function ChatBubble({ message }: { message: Message }) {
+export function ChatBubble({
+  message,
+  continued = false,
+  hideTime = false,
+}: {
+  message: Message;
+  continued?: boolean;
+  hideTime?: boolean;
+}) {
   const { retryTurn } = useStore();
   const imageUrl = useMemo(
     () => (message.image ? URL.createObjectURL(message.image) : undefined),
@@ -56,7 +64,7 @@ export function ChatBubble({ message }: { message: Message }) {
 
   return (
     <div className={`flex items-start gap-2 ${mine ? "justify-end" : "justify-start"}`}>
-      {mine ? null : <CoachMark />}
+      {mine ? null : continued ? <span className="mt-0.5 h-8 w-8 shrink-0" /> : <CoachMark />}
       <div className="max-w-[82%]">
         <div
           className={`bubble-stroke px-3.5 py-2.5 text-[15px] leading-[1.7] break-words text-ink [overflow-wrap:anywhere] ${
@@ -71,9 +79,11 @@ export function ChatBubble({ message }: { message: Message }) {
           ) : null}
           {message.text ? <p className="whitespace-pre-wrap">{message.text}</p> : null}
         </div>
-        <p className={`mt-1 text-[11px] tracking-wide text-ink-faint ${mine ? "text-right" : "pl-0.5"}`}>
-          {formatClock(message.createdAt)}
-        </p>
+        {hideTime ? null : (
+          <p className={`mt-1 text-[11px] tracking-wide text-ink-faint ${mine ? "text-right" : "pl-0.5"}`}>
+            {formatClock(message.createdAt)}
+          </p>
+        )}
       </div>
     </div>
   );

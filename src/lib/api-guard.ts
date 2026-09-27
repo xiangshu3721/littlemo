@@ -173,6 +173,10 @@ export function clipGuideContext(input: unknown): GuideContext | undefined {
     weather: ctx.weather ? clipText(ctx.weather, 8) : undefined,
     stress: ctx.stress ?? null,
     energy: ctx.energy ?? null,
+    justQuant:
+      ctx.justQuant === "weather" || ctx.justQuant === "stress" || ctx.justQuant === "energy"
+        ? ctx.justQuant
+        : undefined,
     known: {
       facts: clipStringList(known.facts, 8, 80),
       emotions: clipStringList(known.emotions, 8, 16),

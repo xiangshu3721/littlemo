@@ -26,6 +26,7 @@ import { LIMITS, clipText, isSafeImageDataUrl } from "@/lib/limits";
 import { resolveEpisodeAction } from "@/lib/router";
 import type {
   Analysis,
+  ConsistencyExpression,
   GuideContext,
   GuideTurn,
   MemoryPack,
@@ -64,6 +65,7 @@ type Store = {
   splitLastBeat: (sessionId: string) => Promise<void>;
   setMood: (sessionId: string, mood: MoodId) => Promise<void>;
   retryAnalysis: (sessionId: string) => Promise<void>;
+  loadExpression: (sessionId: string, force?: boolean) => Promise<void>;
   trash: (sessionId: string) => Promise<void>;
   restore: (sessionId: string) => Promise<void>;
   purge: (sessionId: string) => Promise<void>;
@@ -459,6 +461,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           needs: current?.coreNeeds || [],
         },
         region: profile.region,
+        justQuant: (() => {
+          const previous = messagesRef.current
+            .filter((m) => m.sessionId === userMsg.sessionId && m.id !== userMsg.id && !m.pending)
+            .sort((a, b) => a.createdAt - b.createdAt)
+            .at(-1);
+          const kind = previous?.role === "assistant" ? previous.interaction?.kind : undefined;
+          return kind === "weather" || kind === "stress" || kind === "energy" ? kind : undefined;
+        })(),
       };
       try {
         const res = await fetch("/api/chat", {
@@ -478,7 +488,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const data = (await res.json()) as { turn?: GuideTurn; error?: string };
         if (!res.ok) throw new Error(data.error || "没接上");
         const turn = data.turn!;
-        await wait(replyPause(startedAt, turn.reply.text));
+        const bubbles = (turn.reply.texts?.length ? turn.reply.texts : [turn.reply.text])
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .slice(0, 3);
+        const lines = bubbles.length ? bubbles : [turn.reply.text || "我在。"];
+        await wait(replyPause(startedAt, lines[0]));
         const live = sessionsRef.current.find((s) => s.id === userMsg.sessionId);
         const hasHistoryHere = Boolean(userLines(userMsg.sessionId).some((m) => m.id !== userMsg.id));
         const userClosed = wantsCloseEpisode(userMsg.text);
@@ -495,13 +510,40 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const replyMsg: Message = {
           ...pending,
           pending: false,
-          text: turn.reply.text,
+          createdAt: Date.now(),
+          text: lines[0],
           error: undefined,
           riskLevel: turn.risk_level,
           interaction:
-            turn.reply.interaction !== "text" && turn.reply.options.length
+            lines.length === 1 && turn.reply.interaction !== "text" && turn.reply.options.length
               ? { kind: turn.reply.interaction, options: turn.reply.options }
               : undefined,
+        };
+        const tailInteraction =
+          lines.length > 1 && turn.reply.interaction !== "text" && turn.reply.options.length
+            ? { kind: turn.reply.interaction, options: turn.reply.options }
+            : undefined;
+
+        const deliver = async (sessionId: string, spoken: string[] = lines) => {
+          const pack = spoken.map((line) => line.trim()).filter(Boolean).slice(0, 3);
+          const use = pack.length ? pack : lines;
+          await persistMessage({
+            ...replyMsg,
+            sessionId,
+            text: use[0],
+            interaction: use.length === 1 ? replyMsg.interaction : undefined,
+          });
+          for (let i = 1; i < use.length; i += 1) {
+            await wait(420 + Math.min(780, use[i].length * 28));
+            await persistMessage({
+              ...replyMsg,
+              id: nid(),
+              createdAt: Date.now(),
+              sessionId,
+              text: use[i],
+              interaction: i === use.length - 1 ? tailInteraction : undefined,
+            });
+          }
         };
 
         const idleChat = turn.episode.decision === "skip" || turn.emotion_relevance_score < 30;
@@ -527,7 +569,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             );
             await persistSession(reopened);
             await persistMessage({ ...userMsg, sessionId: old.id });
-            await persistMessage({ ...replyMsg, sessionId: old.id });
+            await deliver(old.id);
             return;
           }
         }
@@ -542,23 +584,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           if (target) {
             if (live && live.id !== target.id) {
               await persistMessage({ ...userMsg, sessionId: target.id });
-              await persistMessage({
-                ...replyMsg,
-                sessionId: target.id,
-                text: /日历|记录/.test(userMsg.text)
-                  ? "这段已经收进情绪日记了，你去「情绪日记」里就能看到。"
-                  : replyMsg.text,
-              });
+              await deliver(
+                target.id,
+                /日历|记录/.test(userMsg.text)
+                  ? ["这段已经收进情绪日记了，你去「情绪日记」里就能看到。"]
+                  : lines,
+              );
               if (!userLines(live.id).some((m) => m.id !== userMsg.id)) {
                 await persistSession({ ...live, deletedAt: Date.now(), endedAt: Date.now() });
               }
             } else {
-              await persistMessage({
-                ...replyMsg,
-                text: /日历|记录/.test(userMsg.text)
-                  ? "这段已经收进情绪日记了，你去「情绪日记」里就能看到。"
-                  : replyMsg.text,
-              });
+              await deliver(
+                target.id,
+                /日历|记录/.test(userMsg.text)
+                  ? ["这段已经收进情绪日记了，你去「情绪日记」里就能看到。"]
+                  : lines,
+              );
             }
             const merged = mergeGuide(target, turn, {
               lastUserAt: userMsg.createdAt,
@@ -609,13 +650,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             await persistMessage({ ...row, sessionId: nextSession.id });
           }
           await persistMessage({ ...userMsg, sessionId: nextSession.id });
-          await persistMessage({ ...replyMsg, sessionId: nextSession.id });
+          await deliver(nextSession.id);
           return;
         }
 
         const current = sessionsRef.current.find((s) => s.id === userMsg.sessionId);
         if (current?.endedAt) {
-          await persistMessage(replyMsg);
+          await deliver(replyMsg.sessionId);
           return;
         }
         if (current) {
@@ -637,7 +678,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             );
           }
         }
-        await persistMessage(replyMsg);
+        await deliver(replyMsg.sessionId);
       } catch (err) {
         await wait(Math.max(0, 600 - (Date.now() - startedAt)));
         await persistMessage({
@@ -787,6 +828,61 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [analyze],
   );
 
+  const loadExpression = useCallback(
+    async (sessionId: string, force = false) => {
+      const session = sessionsRef.current.find((s) => s.id === sessionId);
+      if (!session || session.expressionStatus === "pending") return;
+      if (!force && session.expressionStatus === "done" && session.expression) return;
+      const lines = messagesRef.current
+        .filter((m) => m.sessionId === sessionId && !m.pending && m.text.trim())
+        .map((m) => ({
+          role: m.role,
+          text: m.text,
+          time: formatClock(m.createdAt),
+        }));
+      if (!lines.some((line) => line.role === "user")) {
+        await persistSession({
+          ...session,
+          expressionStatus: "error",
+          expressionError: "这一段还没有可拆的话。",
+        });
+        return;
+      }
+      await persistSession({ ...session, expressionStatus: "pending", expressionError: undefined });
+      try {
+        const res = await fetch("/api/expression", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lines: lines.slice(-LIMITS.analyzeLines).map((line) => ({
+              ...line,
+              text: clipText(line.text, LIMITS.lineChars),
+            })),
+          }),
+        });
+        const data = (await res.json()) as { expression?: ConsistencyExpression; error?: string };
+        if (!res.ok) throw new Error(data.error || "一致性表达没拆开");
+        const latest = sessionsRef.current.find((s) => s.id === sessionId);
+        if (!latest) return;
+        await persistSession({
+          ...latest,
+          expression: data.expression,
+          expressionStatus: "done",
+          expressionError: undefined,
+        });
+      } catch (err) {
+        const latest = sessionsRef.current.find((s) => s.id === sessionId);
+        if (!latest) return;
+        await persistSession({
+          ...latest,
+          expressionStatus: "error",
+          expressionError: err instanceof Error ? err.message : "一致性表达没拆开",
+        });
+      }
+    },
+    [persistSession],
+  );
+
   const updateEpisode = useCallback(
     async (sessionId: string, patch: Partial<Pick<Session, "title" | "primaryEmotions" | "mood">>) => {
       const cur = sessionsRef.current.find((s) => s.id === sessionId);
@@ -934,6 +1030,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       retryTurn,
       setMood,
       retryAnalysis,
+      loadExpression,
       updateEpisode,
       mergeIntoPrevious,
       splitLastBeat,
@@ -958,6 +1055,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       retryTurn,
       setMood,
       retryAnalysis,
+      loadExpression,
       updateEpisode,
       mergeIntoPrevious,
       splitLastBeat,
