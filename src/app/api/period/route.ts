@@ -6,7 +6,7 @@ import {
   rateLimit,
   readJsonBody,
 } from "@/lib/api-guard";
-import { readBearer, requireUser } from "@/lib/auth";
+import { hasCurrentAiDataConsent, readBearer, requireUser } from "@/lib/auth";
 import { apiJson, preflight, withCors } from "@/lib/cors";
 import { analyzePeriod } from "@/lib/deepseek";
 import { asClientId, loadDiaryBundle, savePeriodReport } from "@/lib/diary-cloud";
@@ -52,6 +52,15 @@ export async function POST(req: Request) {
       return apiJson(req, { error: "范围不对" }, 400);
     }
     const label = clipText(parsed.data.label, 48);
+    let userId: string | null = null;
+    if (authed) {
+      const auth = await requireUser(req);
+      if (!auth.ok) return auth.response;
+      if (!hasCurrentAiDataConsent(auth.user)) {
+        return apiJson(req, { error: "请先阅读并同意 AI 数据处理说明。" }, 403);
+      }
+      userId = auth.user.id;
+    }
     const report = await analyzePeriod(
       kind,
       label,
@@ -59,11 +68,7 @@ export async function POST(req: Request) {
       clipText(parsed.data.digest, LIMITS.digestChars),
     );
 
-    let userId: string | null = null;
-    if (authed) {
-      const auth = await requireUser(req);
-      if (!auth.ok) return auth.response;
-      userId = auth.user.id;
+    if (userId) {
       const periodId = asClientId(parsed.data.periodId);
       if (periodId) {
         await savePeriodReport(userId, {

@@ -1,4 +1,4 @@
-import { prisma } from "@littlemo/db";
+import { prisma } from "@/lib/data-store";
 import { publicError, rateLimit, readJsonBody } from "@/lib/api-guard";
 import { publicUser, requireUser } from "@/lib/auth";
 import { apiJson, preflight, withCors } from "@/lib/cors";
@@ -60,5 +60,18 @@ export async function PATCH(req: Request) {
     return apiJson(req, { user: publicUser(user) });
   } catch (err) {
     return apiJson(req, { error: publicError(err, "资料没存上") }, 500);
+  }
+}
+
+export async function DELETE(req: Request) {
+  const limited = rateLimit(req, LIMITS.rateAuthPerMin);
+  if (limited) return withCors(req, limited);
+  const auth = await requireUser(req, { allowUnconsented: true });
+  if (!auth.ok) return auth.response;
+  try {
+    await prisma.user.delete({ where: { id: auth.user.id } });
+    return apiJson(req, { deleted: true });
+  } catch (err) {
+    return apiJson(req, { error: publicError(err, "账号没有注销，请稍后重试") }, 500);
   }
 }

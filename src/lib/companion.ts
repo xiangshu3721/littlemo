@@ -9,17 +9,17 @@ export const COMPANION_SYSTEM = `你是「有点情绪」里的倾听者。用�
 - 诊断、贴心理标签、人格/依恋/疾病判断
 - 开药、治疗方案、问卷、打分
 - 输出 JSON，或周报/月报/洞察/模式总结
-- 声称自己是 AI 模型
+- 不要否认自己是人工智能，不要冒充真人；用户询问身份时如实说明
 
 可以：轻轻点出他原话里最烫的一个词，陪着他再多说一点。问句可有可无，不要连问。
 
 如果用户流露出不想活、自伤、或正在伤害自己：先稳住他，不要深挖原因，明确建议马上联系身边的人或专业力量，并用自然语句写上：
 - 当地急救 120 / 报警 110
 - 心理援助热线 12356
-- 生命热线 400-161-9995`;
+- 不要暗示本服务能自动呼叫救援或由真人实时监护`;
 
 export const CRISIS_COPY =
-  "如果你现在不安全，请不要一个人扛。可以马上联系身边信得过的人，或打当地急救 120 / 报警 110。心理援助热线可试 12356；也可拨打生命热线 400-161-9995。";
+  "如果你现在不安全，请不要一个人扛。可以马上联系身边信得过的人，或打当地急救 120 / 报警 110。心理援助热线可试 12356。本服务不能代替急救或真人实时帮助。";
 
 export function looksLikeCrisis(text: string) {
   const t = text.replace(/\s/g, "");
@@ -27,7 +27,7 @@ export function looksLikeCrisis(text: string) {
 }
 
 export function replyHasHotline(text: string) {
-  return /12356|400-161-9995|120|110/.test(text);
+  return /12356|120|110/.test(text);
 }
 
 export function ensureCrisisCopy(userText: string, reply: string) {

@@ -1,0 +1,126 @@
+.legal-page {
+  --page: #e8e8e6;
+  --surface: #ffffff;
+  --ink: #1a1a1a;
+  --soft: #4a4a4a;
+  --faint: #777777;
+  --line: #e5e5e5;
+  --accent: #5f6f52;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--page);
+  color: var(--ink);
+}
+
+.legal-page.theme-dark {
+  --page: #050505;
+  --surface: #0c0c0c;
+  --ink: #f5f1e6;
+  --soft: #d8cbb6;
+  --faint: #c4a574;
+  --line: #44403a;
+  --accent: #c4a574;
+}
+
+.legal-page__scroll {
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 28px 20px 36px;
+}
+
+.legal-page__kicker,
+.legal-page__title,
+.legal-page__meta,
+.legal-page__heading,
+.legal-page__body,
+.legal-page__foot {
+  display: block;
+}
+
+.legal-page__kicker {
+  color: var(--faint);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+
+.legal-page__title {
+  margin-top: 10px;
+  color: var(--ink);
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-size: 23px;
+  letter-spacing: 0.05em;
+}
+
+.legal-page__meta {
+  margin-top: 10px;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.legal-page__section {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.legal-page__heading {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.legal-page__body {
+  margin-top: 8px;
+  color: var(--soft);
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.legal-page__foot {
+  margin-top: 18px;
+  color: var(--faint);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.legal-page__manage {
+  margin: 16px 0 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.legal-page__actions {
+  flex: none;
+  padding: 10px 20px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.legal-page__agree,
+.legal-page__cancel {
+  margin: 0;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.legal-page__agree {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.theme-dark .legal-page__agree {
+  color: #0a0a0a;
+}
+
+.legal-page__cancel {
+  margin-top: 8px;
+  background: transparent;
+  color: var(--soft);
+}

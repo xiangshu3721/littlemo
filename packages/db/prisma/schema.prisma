@@ -12,13 +12,20 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  openid    String   @unique
-  unionid   String?
-  nickname  String?
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                          String    @id @default(cuid())
+  openid                      String    @unique
+  unionid                     String?
+  nickname                    String?
+  avatar                      String?
+  termsVersion                String?
+  termsConsentedAt            DateTime?
+  sensitiveInfoConsentVersion String?
+  sensitiveInfoConsentedAt    DateTime?
+  aiDataConsentVersion        String?
+  aiDataConsentedAt           DateTime?
+  adultAgeConfirmedAt         DateTime?
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
 
   notes    Note[]
   messages ChatMessage[]
@@ -36,25 +43,25 @@ model Note {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  @@index([userId, createdAt])
   @@unique([userId, clientId])
+  @@index([userId, createdAt])
 }
 
 model ChatMessage {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   role      String
   content   String
   model     String?
   sessionId String?
   session   DiarySession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   clientId  String?
-  createdAt DateTime @default(now())
+  createdAt DateTime      @default(now())
 
+  @@unique([userId, clientId])
   @@index([userId, createdAt])
   @@index([userId, sessionId])
-  @@unique([userId, clientId])
 }
 
 model DiarySession {

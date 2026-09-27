@@ -1,4 +1,4 @@
-import { prisma } from "@littlemo/db";
+import { prisma } from "@/lib/data-store";
 import { publicError, rateLimit, readJsonBody } from "@/lib/api-guard";
 import { requireUser } from "@/lib/auth";
 import { apiJson, preflight, withCors } from "@/lib/cors";

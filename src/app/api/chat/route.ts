@@ -1,4 +1,4 @@
-import { prisma, type ChatMessage, type Note } from "@littlemo/db";
+import { prisma, type ChatMessage, type Note } from "@/lib/data-store";
 import { NextResponse } from "next/server";
 import {
   clipGuideContext,
@@ -10,7 +10,7 @@ import {
   readJsonBody,
 } from "@/lib/api-guard";
 import { chat as gatewayChat } from "@/lib/ai-gateway";
-import { readBearer, requireUser } from "@/lib/auth";
+import { hasCurrentAiDataConsent, readBearer, requireUser } from "@/lib/auth";
 import { COMPANION_SYSTEM, ensureCrisisCopy, toGatewayHistory } from "@/lib/companion";
 import { apiJson, preflight, withCors } from "@/lib/cors";
 import { asClientId, ensureOwnedSession } from "@/lib/diary-cloud";
@@ -112,6 +112,9 @@ async function companionPost(
 ) {
   const auth = await requireUser(req);
   if (!auth.ok) return auth.response;
+  if (!hasCurrentAiDataConsent(auth.user)) {
+    return apiJson(req, { error: "请先阅读并同意 AI 数据处理说明。" }, 403);
+  }
   try {
     const spoken = latestFromMini(data);
     const hasImage = Boolean(data.hasImage);

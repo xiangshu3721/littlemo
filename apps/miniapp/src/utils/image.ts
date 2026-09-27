@@ -100,15 +100,21 @@ async function persistLocal(tempPath: string) {
   }
 }
 
-async function pickOne(maxEdge: number) {
+export async function pickRawImagePath() {
   if (!(await ensurePrivacyAuthorized())) fail("请先同意隐私保护指引。");
-  const picked = await Taro.chooseImage({
+  const picked = await Taro.chooseMedia({
     count: 1,
-    sizeType: ["compressed"],
+    mediaType: ["image"],
     sourceType: ["album", "camera"],
+    sizeType: ["compressed"],
   });
-  const src = picked.tempFilePaths?.[0];
+  const src = picked.tempFiles?.[0]?.tempFilePath;
   if (!src) fail("cancel");
+  return src;
+}
+
+async function pickOne(maxEdge: number) {
+  const src = await pickRawImagePath();
   const size = await fileSize(src);
   if (size > IMAGE_INPUT_BYTES) fail("照片太大了，换一张小一点的。");
   const compressed = await compress(src, maxEdge);

@@ -12,6 +12,7 @@ import {
   shouldUseChooseAvatar,
   writeLocalProfile,
 } from "../../utils/avatar";
+import { isPickCancel, pickRawImagePath } from "../../utils/image";
 import { clearSession, getUser, isLoggedIn, saveUser, type SessionUser } from "../../utils/session";
 import { ensurePrivacyAuthorized } from "../../utils/privacy";
 import { usePageTheme } from "../../utils/theme";
@@ -111,15 +112,12 @@ export default function MinePage() {
   async function onPickFallback() {
     if (nativeAvatar || busy) return;
     try {
-      const res = await Taro.chooseImage({
-        count: 1,
-        sizeType: ["compressed"],
-        sourceType: ["album", "camera"],
-      });
-      const path = res.tempFilePaths?.[0];
-      if (path) await persistFromPath(path);
-    } catch {
-      /* canceled */
+      const path = await pickRawImagePath();
+      await persistFromPath(path);
+    } catch (err) {
+      if (isPickCancel(err)) return;
+      const message = err instanceof Error ? err.message : "头像换不了";
+      Taro.showToast({ title: message.slice(0, 40), icon: "none" });
     }
   }
 
@@ -190,22 +188,8 @@ export default function MinePage() {
     void persistNickname(draftName);
   }
 
-  function showPrivacyFallback() {
-    Taro.showModal({
-      title: "隐私",
-      content: "陪伴对话、情绪日记和深度洞察都会记在你的账号里。清掉这台设备上的小程序缓存，云端记录还在；重新登录后会再同步下来。分析密钥只放在服务器。照片留在本机，发给倾听者的只有「附了一张图」。",
-      showCancel: false,
-      confirmText: "知道了",
-      confirmColor: "#5f6f52",
-    });
-  }
-
   function onPrivacy() {
-    if (process.env.TARO_ENV === "weapp" && typeof Taro.openPrivacyContract === "function") {
-      Taro.openPrivacyContract({ fail: showPrivacyFallback });
-      return;
-    }
-    showPrivacyFallback();
+    Taro.navigateTo({ url: "/pages/privacy-center/index" });
   }
 
   function onLogout() {
@@ -268,12 +252,12 @@ export default function MinePage() {
         <Text className="mine__hint">点昵称或头像可更换，会保存到账号。</Text>
       </View>
       <Button className="mine__row" onClick={onPrivacy}>
-        隐私说明
+        隐私中心
       </Button>
       <Button className="mine__row mine__row--last" onClick={onLogout}>
         退出登录
       </Button>
-      <Text className="mine__foot">昵称与头像可随时改，保存后跟着账号走。点「就聊到这」后，深度洞察会出现在「情绪日记」。日记跟账号存在云端；清掉小程序缓存不会删掉已同步的记录。</Text>
+      <Text className="mine__foot">昵称与头像可随时改。聊天文字和日记保存在账号云端，头像在你主动设置后会上传；聊天图片留在设备。详细处理方式和数据管理操作请进入隐私中心。</Text>
     </View>
   );
 }

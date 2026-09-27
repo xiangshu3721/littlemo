@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
 # Build WeChat miniapp for production upload.
-# Requires CLOUDBASE_ENV_ID. Does not upload or submit review.
+# Uses the existing CloudBase environment by default. Does not upload or submit review.
 set -euo pipefail
 
-if [[ -z "${CLOUDBASE_ENV_ID:-}" ]]; then
-  echo "error: set CLOUDBASE_ENV_ID to the existing CloudBase environment, e.g." >&2
-  echo "  CLOUDBASE_ENV_ID=littlemo-xxxx CLOUDBASE_SERVICE_NAME=littlemo-api ./scripts/build-miniapp-prod.sh" >&2
-  exit 1
-fi
+CLOUDBASE_ENV_ID="${CLOUDBASE_ENV_ID:-littlemo-d2gy2ec0dd102163}"
+export CLOUDBASE_ENV_ID
 case "$CLOUDBASE_ENV_ID" in
   your-cloudbase-env-id|YOUR_CLOUDBASE_ENV_ID|YOUR_CLOUDBASE_ENV_ID_*|test-env)
     echo "error: replace the CloudBase environment placeholder with the real environment ID" >&2
@@ -16,6 +13,7 @@ case "$CLOUDBASE_ENV_ID" in
 esac
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+bash "$ROOT/scripts/check-legal-config.sh"
 cd "$ROOT/apps/miniapp"
 
 export CLOUDBASE_SERVICE_NAME="${CLOUDBASE_SERVICE_NAME:-littlemo-api}"

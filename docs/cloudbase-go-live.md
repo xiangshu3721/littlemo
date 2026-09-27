@@ -27,20 +27,18 @@ openssl rand -base64 48
 
 ---
 
-## 1. 创建 CloudBase 环境 + 云托管 + PostgreSQL
+## 1. 复用现有 CloudBase 环境、云托管和 PostgreSQL
 
 **「你点控制台」**
 
-1. 打开 CloudBase 控制台 → **新建环境**（记下 **环境 ID / envId**，形如 `littlemo-xxxxxx`）。
-2. 在同一环境（或腾讯云）开通：
-   - **云托管（容器）**：用来跑本仓库的 Next.js API（`Dockerfile` → 端口 `3000`）。
-   - **云数据库 PostgreSQL**（或「腾讯云 PostgreSQL」独立实例）：记下连接串，填入 `DATABASE_URL`（生产建议 `sslmode=require`）。
-3. 云托管创建服务时可选「从代码包 / Dockerfile 构建」。本仓库根目录已有 `Dockerfile`（`output: 'standalone'`）。
+1. 继续使用现有环境 `littlemo-d2gy2ec0dd102163` 和 PostgreSQL 共享集群；**不升级套餐、不买独立数据库、不配置公网 IP/端口**。
+2. 复用现有 CloudRun 服务 `littlemo-api`（Dockerfile 监听 `3000`）。当前服务暂停时，本地代码准备好后再由你决定何时恢复/部署。
+3. 后端数据库连接改用 CloudBase PostgreSQL SDK `app.rdb()`，访问走 CloudBase API，不再让 CloudRun 直连 `localhost` 或 TCP 地址。
 
 **「工程师可代做」**
 
 - 解释字段、检查 `Dockerfile` / `next.config.ts` 的 `output: 'standalone'`。
-- 把 `cloudbaserc.json` 里的 `envId` 从占位符改成你的真实 envId（**由你提供字符串**；不要把密钥写进仓库）。
+- `cloudbaserc.json` 和生产构建示例已填入截图可确认的环境 ID；密钥仍只放 CloudRun 密钥配置中，不写入仓库。
 
 ### 如何填写 `cloudbaserc.json`
 
@@ -50,7 +48,7 @@ openssl rand -base64 48
 "envId": "YOUR_CLOUDBASE_ENV_ID"
 ```
 
-把 `YOUR_CLOUDBASE_ENV_ID` 换成控制台里的环境 ID。敏感变量（`DATABASE_URL`、`JWT_SECRET`、`DEEPSEEK_API_KEY`）**不要**写进 `cloudbaserc.json` 再提交；在云托管「环境变量 / 密钥」面板配置。
+`envId` 已填为当前环境。敏感变量（`CLOUDBASE_APIKEY`、`JWT_SECRET`、`DEEPSEEK_API_KEY`）**不要**写进 `cloudbaserc.json` 再提交；只在云托管「环境变量 / 密钥」面板配置。
 
 本地若安装了 CloudBase CLI，可用（需你登录，**可能触发账号交互**，工程师默认只文档化）：
 
@@ -66,14 +64,23 @@ openssl rand -base64 48
 
 **「你点控制台」**（云托管 → 服务 → 环境变量 / 密钥管理）
 
-对照根目录 `.env.production.example`：
+对照根目录 `.env.production.example`。复用当前资源与已有模型密钥，不新增数据库实例或付费套餐：
 
 | 变量 | 生产值注意 |
 | --- | --- |
-| `DATABASE_URL` | 云 PostgreSQL 连接串 |
+| `CLOUDBASE_APIKEY` | CloudBase PostgreSQL 后端 API Key（`service_role`），仅存云托管密钥；**绝不放入小程序**。服务端现有 API 会继续验证业务 JWT 并按当前用户 ID 过滤数据 |
+| `CLOUDBASE_ENV_ID` | 已有环境 ID：`littlemo-d2gy2ec0dd102163` |
+| `DATABASE_URL` | **删除旧值**；生产运行不再使用数据库 TCP 连接串 |
 | `JWT_SECRET` | 高强度随机串 |
 | `DEEPSEEK_API_KEY` | DeepSeek 控制台 |
-| `DEEPSEEK_MODEL` | 如 `deepseek-chat` |
+| `DEEPSEEK_MODEL` | `deepseek-flash` |
+| `LEGAL_OPERATOR_NAME` / `LEGAL_PRIVACY_CONTACT` | 小程序展示的运营主体及个人信息保护联系渠道 |
+| `LEGAL_COMPLAINT_CONTACT` / `LEGAL_COMPLAINT_RESPONSE_TIME` | 用户投诉举报入口及承诺反馈时限 |
+| `LEGAL_AGE_SCOPE` | 当前客户端仅支持成人服务范围 `仅限年满18周岁`；未成年人开放前需要先实现对应模式和保护流程 |
+| `LEGAL_STORAGE_REGION` / `LEGAL_RETENTION_DESCRIPTION` | 真实数据库地域、云端记录及备份/日志的保存规则 |
+| `MINIPROGRAM_FILING_NO` | 微信小程序备案编号；完成备案后填入 |
+| `DEEPSEEK_SERVICE_FILING_NO` / `DEEPSEEK_ALGORITHM_FILING_NO` | 经核实的模型服务与算法备案信息；确不适用时也需先核实再说明 |
+| `DEEPSEEK_DATA_HANDLING` / `DEEPSEEK_DATA_REGION` | 当前 API 合同下的留存、模型优化用途和处理地点，不能照抄面向消费者的默认政策 |
 
 可选：`CORS_ORIGINS`（仅当还有 Taro H5 调该 API 时）。
 
@@ -81,19 +88,11 @@ openssl rand -base64 48
 
 ---
 
-## 3. 执行数据库迁移（migrate deploy）
+## 3. 数据表和迁移状态
 
-**「工程师可代做」**（在你提供只读/迁移用的 `DATABASE_URL` 的前提下，于本机一次性执行；或 **「你点控制台」** 用云托管「任务 / 一次性命令」）：
+现有 PostgreSQL 表和已完成的迁移保留，无需重建。共享集群没有可供本方案使用的公网 PostgreSQL TCP 地址，因此生产环境不再运行 `prisma migrate deploy`。
 
-```bash
-# 在仓库根目录；DATABASE_URL 仅放本机临时环境，勿写入 git
-export DATABASE_URL='postgresql://…'   # 你提供
-npm install
-npm run db:deploy
-# 等价：npx prisma migrate deploy --schema packages/db/prisma/schema.prisma
-```
-
-确认 `packages/db/prisma/migrations/` 下迁移已应用到生产库后再切流量。
+后续若确实新增表结构，先在 `cloudbase/migrations/` 维护对应 SQL，再通过 CloudBase PostgreSQL SQL 编辑器按顺序应用并验证；本次不新增迁移，也不触碰现有数据。
 
 ---
 
@@ -119,6 +118,8 @@ Standalone 启动命令已在镜像内：`node server.js`（`HOSTNAME=0.0.0.0`�
 
 微信小程序生产版使用 `@cloudbase/js-sdk` 初始化独立 CloudBase 环境，再以 `app.callContainer()` 调用 `littlemo-api`，不需要把自定义域名接入本版本链路。客户端先以 `auth.signInWithOpenId({ useWxCloud: false })` 建立 CloudBase 身份；云托管服务端通过 CloudBase SDK 读取当前调用者身份，不读取或信任客户端上传的 `openid` / `userId`，登录接口再签发现有业务 JWT。
 
+CloudRun 服务端用专属 CloudBase 后端 API Key 调用 PostgreSQL SDK。该 Key 对应服务端高权限角色并绕过表 RLS，必须只存在于 `littlemo-api` 云托管环境变量中；应用 API 仍验证业务 JWT，并把读写条件限定为登录用户的数据。小程序包内不包含该 Key。
+
 如需 Taro H5 或外部系统联调，再按控制台要求绑定 HTTPS 域名，并将源配置到 `CORS_ORIGINS` / `API_BASE_URL`。
 
 健康检查建议：
@@ -127,7 +128,7 @@ Standalone 启动命令已在镜像内：`node server.js`（`HOSTNAME=0.0.0.0`�
 curl -sS https://云托管地址/api/health
 # 预期：{"status":"ok","service":"littlemo-api",...}
 curl -sS https://云托管地址/api/health/database
-# 预期：数据库可用时返回 200；未连通时返回 503，不泄漏连接串
+# 预期：通过 RDB SDK 只读检查时返回 200；未连通时返回 503，不泄漏密钥
 ```
 
 ---
@@ -139,7 +140,8 @@ curl -sS https://云托管地址/api/health/database
 - 确认小程序 AppID 已关联现有 CloudBase 环境。
 - 确认云托管服务名为 `littlemo-api`，服务端口为 `3000`。
 - 在 CloudBase 云托管 / HTTP 网关的访问配置中开启官方身份认证，并确认认证请求会注入 `x-cloudbase-context`；不要让业务服务存在可绕过认证网关的公网直达入口。后端只从这个当前请求上下文建立业务用户身份，不接受客户端 body/header 自报的 `uid`、`openid`。
-- 先在控制台配置小程序用户隐私保护指引，至少覆盖微信昵称/头像、选中的照片或视频、账号云端存储的对话与日记，以及发送给 DeepSeek 的处理用途；提审时同步勾选实际收集的个人信息类型。
+- 在控制台配置小程序用户隐私保护指引，准确覆盖微信身份标识、可选昵称/头像、主动选取的照片/相机、账号云端对话与日记，以及向 DeepSeek API 发送文字和上下文的用途；头像会上传云端，聊天原图留在本机。提审时同步勾选实际处理的信息类型。
+- 小程序登录前有服务协议/隐私政策同意和情绪心理类敏感个人信息单独同意；首次 AI 请求另行取得 AI 数据处理同意。隐私中心有数据副本导出、分别撤回敏感信息/AI 同意、账号注销删除、投诉联系方式和紧急求助入口。正式上传前需完成占位字段、年龄/监护人/紧急联系人策略、模型备案号、DeepSeek API 合同与数据区域核实。
 - 本版本的小程序 API 走 `callContainer`，不要求把 `littlemo.icu` 或自定义 API 域名写入 `request 合法域名`。
 
 ---
@@ -150,7 +152,12 @@ curl -sS https://云托管地址/api/health/database
 
 ```bash
 # 方式 A：脚本（推荐）
-CLOUDBASE_ENV_ID=你的现有环境ID CLOUDBASE_SERVICE_NAME=littlemo-api ./scripts/build-miniapp-prod.sh
+cp apps/miniapp/.env.production.example apps/miniapp/.env.production  # 本机未跟踪文件，只放公开说明，不放服务密钥
+# 编辑该文件填完 LEGAL_* / DEEPSEEK_* 公开说明及真实 CloudBase envId，然后在当前 shell 导入：
+set -a
+source apps/miniapp/.env.production
+set +a
+./scripts/build-miniapp-prod.sh
 
 # 方式 B：手动
 cd apps/miniapp
@@ -162,12 +169,14 @@ npm run build:weapp
 说明：
 
 - 微信生产构建只注入公开的 `CLOUDBASE_ENV_ID` / `CLOUDBASE_SERVICE_NAME`；本地/H5 可额外使用公开的 `API_BASE_URL`，生产微信小程序不得 fallback 到它。**禁止**把 `JWT_SECRET` / `DEEPSEEK_API_KEY` 放进 `apps/miniapp`。
+- `apps/miniapp/.env.production` 仅用于生产构建的公开信息。此文件不会提交到仓库；运营主体、年龄策略、备案、处理区域、保存期限、投诉渠道以及 DeepSeek API 数据规则必须与云托管环境变量逐项一致。`scripts/check-legal-config.sh` 会拒绝空值和占位符。
+- 登录页和阅读页启动时还会从后端 `/api/legal` 读取同一组公开字段；如果云托管服务未运行、后端仍是占位值，注册仍会被前后端共同拦截。改完云托管环境变量后，先确认 `/api/legal` 可读，再重新上传经过生产检查的小程序包。
 - 本地开发仍可用 `apps/miniapp/.env.example` 的 `http://127.0.0.1:3000`，并在开发者工具关闭域名校验。
 
 **「你点控制台 / 你本机微信开发者工具」**：
 
 1. 用微信开发者工具打开 `apps/miniapp`（`miniprogramRoot` = `dist/`）。
-2. **正式上传前**把 `project.config.json` → `setting.urlCheck` 设为 **`true`**（仓库默认本地为 `false` 方便调试；发布构建请打开校验）。也可在工具里确认「不校验合法域名」已关闭。
+2. 正式上传前再次确认 `project.config.json` → `setting.urlCheck` 为 **`true`**，并确认开发者工具中的「不校验合法域名」已关闭。
 3. **上传**代码 → 登录小程序后台 **提交审核** → 通过后 **发布**。
 
 ---
@@ -185,7 +194,7 @@ npm run build:weapp
 | --- | --- |
 | 开 CloudBase 环境 / 云托管 / PostgreSQL（可能产生费用） | **你点控制台** |
 | 填 `envId`、环境变量真实值 | **你点控制台**（工程师可代改占位符结构） |
-| `prisma migrate deploy` | 工程师可代做（需你给 `DATABASE_URL`）或你在控制台跑任务 |
+| 现有表迁移 | 已完成；不需再次执行。未来 SQL 变更在 CloudBase PG 控制台应用 |
 | `docker build` / 检查 Dockerfile、standalone | **工程师可代做** |
 | 推镜像 / 点「发布」服务 | **你点控制台**（或你登录 CLI） |
 | 绑域名、配证书、备案 | **你点控制台** |

@@ -18,5 +18,6 @@
   "compileType": "miniprogram",
   "libVersion": "3.5.5",
   "srcMiniprogramRoot": "dist/",
-  "condition": {}
+  "condition": {},
+  "simulatorPluginLibVersion": {}
 }

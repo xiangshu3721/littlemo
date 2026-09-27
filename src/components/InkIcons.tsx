@@ -67,6 +67,15 @@ export function IconSend({ className }: IconProps) {
   );
 }
 
+export function IconMic({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <rect {...stroke} x="9" y="4.6" width="6" height="9.6" rx="3" />
+      <path {...stroke} d="M7.2 11.4a4.8 4.8 0 0 0 9.6 0M12 16.2V19" />
+    </svg>
+  );
+}
+
 export function IconImage({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>

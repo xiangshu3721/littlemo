@@ -22,7 +22,6 @@ const CHECKS: Array<Pick<CheckResult, "key" | "label">> = [
   { key: "auth", label: "CloudBase 微信身份登录" },
   { key: "health", label: "云托管健康检查" },
   { key: "database", label: "数据库连接检查" },
-  { key: "roundTrip", label: "数据库真实写入并读取" },
 ];
 
 function initialResults(): CheckResult[] {
@@ -78,8 +77,7 @@ export default function DiagnosticsPage() {
       }
 
       if (!(await runContainerCheck("health", "/api/health", "服务健康检查成功"))) return;
-      if (!(await runContainerCheck("database", "/api/health/database", "数据库连接成功"))) return;
-      await runContainerCheck("roundTrip", "/api/health/database", "POST", "数据库写入并读取成功");
+      await runContainerCheck("database", "/api/health/database", "CloudBase PostgreSQL 只读访问成功");
     } finally {
       setRunning(false);
     }
@@ -88,17 +86,14 @@ export default function DiagnosticsPage() {
   async function runContainerCheck(
     key: string,
     path: string,
-    detailOrMethod: string,
-    successDetail?: string,
+    detail: string,
   ) {
-    const method: "GET" | "POST" = successDetail ? "POST" : "GET";
-    const detail = successDetail || detailOrMethod;
+    const method = "GET" as const;
     update(key, { state: "running", detail: `正在调用 ${method} ${path}` });
     try {
-      const response = await requestThroughCloudbase<{ error?: string; write?: string; read?: string }>({
+      const response = await requestThroughCloudbase<{ error?: string }>({
         path,
         method,
-        data: successDetail ? { probe: "littlemo-production-check" } : undefined,
         header: { "Content-Type": "application/json" },
         timeout: 30_000,
       });

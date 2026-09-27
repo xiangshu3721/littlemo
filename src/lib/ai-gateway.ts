@@ -34,7 +34,7 @@ export async function chat(input: ChatInput): Promise<ChatResult> {
 async function deepseekChat(input: ChatInput): Promise<ChatResult> {
   const key = process.env.DEEPSEEK_API_KEY;
   if (!key) throw new Error("NO_KEY");
-  const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
+  const model = process.env.DEEPSEEK_MODEL || "deepseek-flash";
   const body: Record<string, unknown> = {
     model,
     messages: input.messages,

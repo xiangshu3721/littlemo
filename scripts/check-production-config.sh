@@ -1,8 +1,23 @@
 #!/usr/bin/env bash
 # Validate production variables without printing their values.
 set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+if [[ -f "$ROOT/.env.production" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$ROOT/.env.production"
+  set +a
+fi
 
 missing=0
+
+# These public identifiers are already known for this project; avoid making
+# the operator copy values that are fixed in cloudbaserc.json and build config.
+CLOUDBASE_ENV_ID="${CLOUDBASE_ENV_ID:-littlemo-d2gy2ec0dd102163}"
+CLOUDBASE_SERVICE_NAME="${CLOUDBASE_SERVICE_NAME:-littlemo-api}"
+export CLOUDBASE_ENV_ID CLOUDBASE_SERVICE_NAME
 
 require_value() {
   local name="$1"
@@ -14,9 +29,16 @@ require_value() {
 
 require_value CLOUDBASE_ENV_ID
 require_value CLOUDBASE_SERVICE_NAME
-require_value DATABASE_URL
+require_value CLOUDBASE_APIKEY
 require_value JWT_SECRET
 require_value DEEPSEEK_API_KEY
+
+if [[ -n "${DATABASE_URL:-}" ]]; then
+  echo "obsolete: remove DATABASE_URL; production uses the CloudBase PostgreSQL SDK" >&2
+  missing=1
+fi
+
+bash "$SCRIPT_DIR/check-legal-config.sh"
 
 if [[ "${CLOUDBASE_SERVICE_NAME:-}" != "littlemo-api" ]]; then
   echo "invalid: CLOUDBASE_SERVICE_NAME must be littlemo-api" >&2

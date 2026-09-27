@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { IconLotus, IconSprig } from "@/components/InkIcons";
 import type { Message } from "@/lib/types";
 import { formatClock } from "@/lib/dates";
 import { useStore } from "@/context/store";
@@ -81,10 +80,18 @@ export function ChatBubble({ message }: { message: Message }) {
 }
 
 function CoachMark() {
+  const { profile } = useStore();
+  const initial = profile.nickname.slice(0, 1);
   return (
-    <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line text-accent">
-      <IconSprig className="h-4 w-4 [[data-theme=dark]_&]:hidden" />
-      <IconLotus className="hidden h-4 w-4 [[data-theme=dark]_&]:block" />
+    <span className="mt-0.5 grid h-8 w-8 shrink-0 overflow-hidden rounded-full bg-wash shadow-[inset_0_0_0_1px_var(--line)]">
+      {profile.avatarDataUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={profile.avatarDataUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <span className="grid h-full w-full place-items-center font-display text-[13px] text-ink-soft">
+          {initial}
+        </span>
+      )}
     </span>
   );
 }
