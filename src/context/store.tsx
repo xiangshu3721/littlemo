@@ -20,6 +20,7 @@ import {
   putReport,
   putSession,
 } from "@/lib/db";
+import { postApi } from "@/lib/client-api";
 import { formatClock, today } from "@/lib/dates";
 import { hoursBetween, isArchiveMark, wantsCloseEpisode } from "@/lib/guide";
 import { LIMITS, clipText, isSafeImageDataUrl } from "@/lib/limits";
@@ -262,18 +263,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const start = sessionsRef.current.find((s) => s.id === sessionId) || session;
       await persistSession({ ...start, analysisStatus: "pending", analysisError: undefined });
       try {
-        const res = await fetch("/api/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lines: lines.slice(-LIMITS.analyzeLines).map((l) => ({
-              ...l,
-              text: clipText(l.text, LIMITS.lineChars),
-            })),
-          }),
+        const data = await postApi<{ analysis?: Analysis; error?: string }>("/api/analyze", {
+          lines: lines.slice(-LIMITS.analyzeLines).map((l) => ({
+            ...l,
+            text: clipText(l.text, LIMITS.lineChars),
+          })),
         });
-        const data = (await res.json()) as { analysis?: Analysis; error?: string };
-        if (!res.ok) throw new Error(data.error || "分析失败");
         const latest = sessionsRef.current.find((s) => s.id === sessionId);
         if (!latest) return;
         await persistSession({
@@ -471,22 +466,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })(),
       };
       try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            history: history.slice(-LIMITS.historyTurns).map((line) => ({
-              role: line.role,
-              text: clipText(line.text, LIMITS.lineChars),
-            })),
-            latest: clipText(userMsg.text, LIMITS.latestChars),
-            hasImage: Boolean(userMsg.image),
-            memory: buildMemory(userMsg.sessionId),
-            context,
-          }),
+        const data = await postApi<{ turn?: GuideTurn; error?: string }>("/api/chat", {
+          history: history.slice(-LIMITS.historyTurns).map((line) => ({
+            role: line.role,
+            text: clipText(line.text, LIMITS.lineChars),
+          })),
+          latest: clipText(userMsg.text, LIMITS.latestChars),
+          hasImage: Boolean(userMsg.image),
+          memory: buildMemory(userMsg.sessionId),
+          context,
         });
-        const data = (await res.json()) as { turn?: GuideTurn; error?: string };
-        if (!res.ok) throw new Error(data.error || "没接上");
         const turn = data.turn!;
         const bubbles = (turn.reply.texts?.length ? turn.reply.texts : [turn.reply.text])
           .map((line) => line.trim())
@@ -850,18 +839,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
       await persistSession({ ...session, expressionStatus: "pending", expressionError: undefined });
       try {
-        const res = await fetch("/api/expression", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lines: lines.slice(-LIMITS.analyzeLines).map((line) => ({
-              ...line,
-              text: clipText(line.text, LIMITS.lineChars),
-            })),
-          }),
+        const data = await postApi<{ expression?: ConsistencyExpression; error?: string }>("/api/expression", {
+          lines: lines.slice(-LIMITS.analyzeLines).map((line) => ({
+            ...line,
+            text: clipText(line.text, LIMITS.lineChars),
+          })),
         });
-        const data = (await res.json()) as { expression?: ConsistencyExpression; error?: string };
-        if (!res.ok) throw new Error(data.error || "一致性表达没拆开");
         const latest = sessionsRef.current.find((s) => s.id === sessionId);
         if (!latest) return;
         await persistSession({

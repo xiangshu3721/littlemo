@@ -1,5 +1,4 @@
 import { prisma, type ChatMessage, type Note } from "@/lib/data-store";
-import { NextResponse } from "next/server";
 import {
   clipGuideContext,
   clipHistory,
@@ -215,18 +214,21 @@ async function companionPost(
   }
 }
 
-async function webCoachPost(data: {
-  history?: ChatLine[];
-  latest?: string;
-  hasImage?: boolean;
-  memory?: MemoryPack;
-  context?: GuideContext;
-}) {
+async function webCoachPost(
+  req: Request,
+  data: {
+    history?: ChatLine[];
+    latest?: string;
+    hasImage?: boolean;
+    memory?: MemoryPack;
+    context?: GuideContext;
+  },
+) {
   try {
     const latest = clipText(data.latest, LIMITS.latestChars).trim();
     const hasImage = Boolean(data.hasImage);
     if (!latest && !hasImage) {
-      return NextResponse.json({ error: "先写一点，或附一张图。" }, { status: 400 });
+      return apiJson(req, { error: "先写一点，或附一张图。" }, 400);
     }
     const turn = await replyTurn({
       history: clipHistory(data.history),
@@ -235,15 +237,15 @@ async function webCoachPost(data: {
       memory: clipMemory(data.memory),
       context: clipGuideContext(data.context),
     });
-    return NextResponse.json({ turn });
+    return apiJson(req, { turn });
   } catch (err) {
-    return NextResponse.json({ error: publicError(err, "没接上") }, { status: 500 });
+    return apiJson(req, { error: publicError(err, "没接上") }, 500);
   }
 }
 
 export async function POST(req: Request) {
   const limited = rateLimit(req, LIMITS.rateChatPerMin);
-  if (limited) return readBearer(req) ? withCors(req, limited) : limited;
+  if (limited) return withCors(req, limited);
   const authed = Boolean(readBearer(req));
   try {
     const parsed = await readJsonBody<{
@@ -257,16 +259,13 @@ export async function POST(req: Request) {
       clientId?: string;
       sessionId?: string;
     }>(req, LIMITS.jsonBodyChat);
-    if (!parsed.ok) {
-      return authed ? withCors(req, parsed.response) : parsed.response;
-    }
+    if (!parsed.ok) return withCors(req, parsed.response);
 
     if (authed || !isWebCoachPayload(parsed.data)) {
       return companionPost(req, parsed.data);
     }
-    return webCoachPost(parsed.data);
+    return webCoachPost(req, parsed.data);
   } catch (err) {
-    const res = NextResponse.json({ error: publicError(err, "没接上") }, { status: 500 });
-    return authed ? withCors(req, res) : res;
+    return apiJson(req, { error: publicError(err, "没接上") }, 500);
   }
 }

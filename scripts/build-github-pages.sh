@@ -24,4 +24,7 @@ fi
 
 export GITHUB_PAGES=true
 export NEXT_TELEMETRY_DISABLED=1
+# Static Pages cannot run route handlers. Chat, diary analysis, and
+# consistency expression call the public CloudBase service instead.
+export NEXT_PUBLIC_API_BASE="${NEXT_PUBLIC_API_BASE:-https://littlemo-api-312607-7-1304965105.sh.run.tcloudbase.com}"
 npm run build
