@@ -2,11 +2,21 @@ import { wrapUntrusted } from "./api-guard";
 import { MOODS } from "./moods";
 import type { EmotionStage, InteractionKind, ReplyMode } from "./guide";
 import { REPLY_MODES, STAGES, safetyResources, wantsCloseEpisode } from "./guide";
-import { COACH_SYSTEM, coachTurnHint, isShortAck } from "./coach";
+import {
+  COACH_SYSTEM,
+  coachTurnHint,
+  dropQuestions,
+  nextQuantStep,
+  shouldHoldReply,
+  withNextQuantAsk,
+  withQuantSummary,
+} from "./coach";
+import { readScore, readWeather } from "./guide";
 import { LIMITS, clipText } from "./limits";
 import type {
   Analysis,
   ChatLine,
+  ConsistencyExpression,
   GuideContext,
   GuideTurn,
   MemoryPack,
@@ -119,9 +129,21 @@ function parseGuideTurn(data: Record<string, unknown>, region?: string): GuideTu
   const stage = String(data.stage || "expression") as EmotionStage;
   const interaction = String(reply.interaction || "text") as InteractionKind;
   const risk = Math.min(3, Math.max(0, Number(data.risk_level) || 0));
-  const text =
+  const fallback =
     String(reply.text || data.reply || "").trim() ||
-    (risk >= 2 ? "我先陪着你。这一刻最重要的是你是安全的。" : "我在。你想从哪一句说起？");
+    (risk >= 2 ? "我先陪着你。这一刻最重要的是你是安全的。" : "我在。");
+  const listed = asStringList(reply.texts)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  const splitFallback = fallback
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  let texts = listed.length ? listed : splitFallback.length > 1 ? splitFallback : [fallback];
+  if (risk >= 2) texts = [`${texts.join("\n")}\n\n${safetyResources(region)}`.trim()];
+  const text = risk >= 2 ? texts[0] : texts.join("\n");
   const decisionRaw = String(episode.decision || "continue");
   const decision =
     decisionRaw === "new" ||
@@ -173,7 +195,8 @@ function parseGuideTurn(data: Record<string, unknown>, region?: string): GuideTu
           ? interaction
           : "text",
       options: asStringList(reply.options).slice(0, 8),
-      text: risk >= 2 ? `${text}\n\n${safetyResources(region)}` : text,
+      text,
+      texts,
       reframe_now: Boolean(reply.reframe_now) && risk < 2,
       safety_note: risk >= 1 ? String(reply.safety_note || "").trim() : undefined,
     },
@@ -213,7 +236,15 @@ export async function replyTurn(input: {
 已掌握情绪：${known?.emotions.join(" / ") || "无"}
 已掌握想法：${known?.thoughts.join(" / ") || "无"}
 已掌握需要：${known?.needs.join(" / ") || "无"}
-${coachTurnHint({ askedStreak: ctx?.askedStreak || 0, latest: input.latest, highLoad })}
+${coachTurnHint({
+  askedStreak: ctx?.askedStreak || 0,
+  latest: input.latest,
+  highLoad,
+  justQuant: ctx?.justQuant,
+  weather: ctx?.weather,
+  stress: ctx?.stress,
+  energy: ctx?.energy,
+})}
 
 这一段目前的对话：
 ${wrapUntrusted("本段对话", historyText)}
@@ -222,15 +253,76 @@ ${wrapUntrusted("本段对话", historyText)}
 ${wrapUntrusted("本轮原话", input.latest || "（只有图）")}`,
       },
     ],
-    0.45,
+    0.6,
   );
 
   const turn = parseGuideTurn(data, ctx?.region);
-  const shortAck = isShortAck(input.latest);
-  if (shortAck && (ctx?.askedStreak || 0) >= 1) {
+  if (ctx?.justQuant === "stress") {
+    const score = readScore(input.latest);
+    if (score != null) turn.state.stress = score;
+  } else if (ctx?.justQuant === "energy") {
+    const score = readScore(input.latest);
+    if (score != null) turn.state.energy = score;
+  } else if (ctx?.justQuant === "weather") {
+    const weather = readWeather(input.latest);
+    if (weather) turn.state.weather = weather;
+  }
+  const quantAnswered =
+    (ctx?.justQuant === "weather" && Boolean(readWeather(input.latest))) ||
+    (ctx?.justQuant === "stress" && readScore(input.latest) != null) ||
+    (ctx?.justQuant === "energy" && readScore(input.latest) != null);
+  const stressNow = ctx?.justQuant === "stress" ? readScore(input.latest) : ctx?.stress;
+  const energyNow = ctx?.justQuant === "energy" ? readScore(input.latest) : ctx?.energy;
+  const quantStep =
+    quantAnswered && turn.risk_level < 2 ? nextQuantStep(ctx?.justQuant, stressNow, energyNow) : null;
+  if (quantStep === "stress" || quantStep === "energy") {
+    turn.reply.interaction = quantStep;
+    turn.reply.options = [];
+    turn.reply.ask_question = true;
+    turn.reply.texts = withNextQuantAsk(turn.reply.texts, quantStep);
+    turn.reply.text = turn.reply.texts.join("\n");
+    if (quantStep === "stress") turn.state.stress = ctx?.stress ?? null;
+    if (quantStep === "energy") turn.state.energy = ctx?.energy ?? null;
+  } else if (quantStep === "summary") {
+    turn.reply.interaction = "text";
+    turn.reply.options = [];
+    turn.reply.ask_question = false;
+    const held = turn.reply.texts.map(dropQuestions).map((line) => line.trim()).filter(Boolean);
+    turn.reply.texts = withQuantSummary(held.length ? held : turn.reply.texts, {
+      weather: turn.state.weather,
+      stress: turn.state.stress,
+      energy: turn.state.energy,
+    });
+    turn.reply.text = turn.reply.texts.join("\n");
+  }
+  const holdOnly =
+    !quantStep &&
+    shouldHoldReply({
+      askedStreak: ctx?.askedStreak || 0,
+      latest: input.latest,
+      highLoad,
+      justQuant: ctx?.justQuant,
+    });
+  if (holdOnly && turn.risk_level < 2) {
     turn.reply.ask_question = false;
     turn.reply.interaction = "text";
     turn.reply.options = [];
+    const held = turn.reply.texts.map(dropQuestions).map((line) => line.trim()).filter(Boolean);
+    turn.reply.texts = held.length
+      ? held
+      : turn.reply.texts.map((line) => line.replace(/[?？]+/g, "。").replace(/。{2,}/g, "。").trim()).filter(Boolean);
+    turn.reply.text = turn.reply.texts.join("\n");
+    turn.reply.ask_question = false;
+  }
+  if (!holdOnly && turn.risk_level < 2) {
+    const quantifying =
+      turn.reply.interaction === "weather" ||
+      turn.reply.interaction === "stress" ||
+      turn.reply.interaction === "energy";
+    turn.reply.ask_question = quantifying || turn.reply.texts.some((line) => /[?？]/.test(line));
+    if (turn.reply.interaction === "weather") turn.state.weather = ctx?.weather;
+    if (turn.reply.interaction === "stress") turn.state.stress = ctx?.stress ?? null;
+    if (turn.reply.interaction === "energy") turn.state.energy = ctx?.energy ?? null;
   }
   if (highLoad && turn.risk_level < 2) {
     if (turn.reply.mode === "REFRAME" || turn.reply.mode === "EXPLORE_PATTERN") {
@@ -331,6 +423,81 @@ emotions 2-4 个。suggestedMood 只能是 ${MOOD_IDS}。pattern 不要写成「
     energyTo: data.energyTo == null ? null : Number(data.energyTo),
     suggestedMood: valid ? suggested : undefined,
   };
+}
+
+function readExpression(data: Record<string, unknown>): ConsistencyExpression {
+  const text = (value: unknown, fallback: string) => String(value || "").trim() || fallback;
+  return {
+    observation: text(data.observation, "这段里我还没说出能核对的事实。"),
+    feeling: text(data.feeling, "这段里我还没把感受说清。"),
+    need: text(data.need, "这段里我还没说出需要。"),
+    request: text(data.request, "这段里我还没形成一个具体请求。"),
+    expression: text(data.expression, "这段还没能连成一句可以说出口的话。"),
+  };
+}
+
+function expressionTalksPast(expression: ConsistencyExpression) {
+  const blob = Object.values(expression).join("\n");
+  return /对自己|对方回|我说了|你刚才|你问我|你让我|你听到|你看到|朋友|家人|同事|同学|伴侣|有人|别人|(?<!其)他|(?<!其)她/.test(blob);
+}
+
+export async function expressConsistency(lines: TranscriptLine[]): Promise<ConsistencyExpression> {
+  const mine = lines.filter((line) => line.role === "user" && line.text.trim());
+  const spokenText = mine
+    .slice(-LIMITS.analyzeLines)
+    .map((line) => `${line.time} 我：${clipText(line.text, LIMITS.lineChars)}`)
+    .join("\n");
+  const namesSomeone = /你|朋友|家人|同事|同学|伴侣|孩子|爸|妈|领导|老师|(?<!其)他|(?<!其)她/.test(spokenText);
+  const spoken = wrapUntrusted(
+    "我说过的话",
+    namesSomeone
+      ? spokenText
+      : `${spokenText}\n\n补充：这段原话没有对方做过的事。观察用「我」开头，只复述我的事实，不要写你看到、你听到、你问我。感受顺着我原话的情绪，不要改成相反的心情。请求也顺着我的原话，不要改成让对方追问我。`,
+  );
+  const system = `把「我」的情绪记录，改写成我当面说给对方听的话。情绪是外面的人、事、物带起来的，所以这是对外沟通，不是对自己说，也不是跟旁边的人转述。
+
+对方一律称「你」。我原话里的朋友、家人、同事、同学、伴侣，输出时都改成「你」，不要再出现这些词，也不要出现「有人」「别人」「他」「她」。观察用「你」或「我们」开头，不要用「我去见了…」这种旁白。
+
+这些话是我说的，不是你说的。禁止「你刚才说」「你问我」「你让我」「你听到」「对方回」「我说了」「对自己」。原话里没有写出你做过的事，观察就不要写你的动作，改从「我」或「我们」讲已经发生的事实。没点名也用「你」，不要安上没说过的身份和情节。
+
+四步都是对你说的，每步 1 到 3 句：
+1. 观察：能核对的事实，不评价，不说「你总是」「从来不」。
+2. 感受：我的情绪和身体感觉，不把评价伪装成感受。
+3. 需要：我需要你怎样，不指责。
+4. 请求：一件具体的、你现在能做也能拒绝的事，不用「必须」「不许」。
+
+expression 把四步连成一段可以直接对你说的话，不要带步骤名。
+不确定就说「我好像…」「我还说不清」。不要诊断，不要鸡汤。
+
+只学口气，不要照抄例子。原话「昨天的消息你一直没回」要说成：「你昨天一直没回我的消息。我有点慌，也有点没底。我需要知道你是不是还在。你能不能今天给我回一句？」不要说成「我给朋友发了消息，你能不能听我说」，也不要编「你问我」「你让我说」。
+
+只输出 JSON：{"observation":"","feeling":"","need":"","request":"","expression":""}`;
+
+  const data = await chatJson(
+    [
+      { role: "system", content: system },
+      { role: "user", content: spoken },
+    ],
+    0.3,
+  );
+  let expression = readExpression(data);
+  if (!expressionTalksPast(expression)) return expression;
+
+  const retry = await chatJson(
+    [
+      { role: "system", content: system },
+      { role: "user", content: spoken },
+      { role: "assistant", content: JSON.stringify(expression) },
+      {
+        role: "user",
+        content:
+          "上一稿还是在跟旁边的人转述，或把我的话安到了对方身上。重写：对方只称「你」，观察用「你」或「我们」，不要出现朋友、家人、同学、有人、他、她、你刚才说、你问我、对自己。只输出 JSON。",
+      },
+    ],
+    0.2,
+  );
+  expression = readExpression(retry);
+  return expression;
 }
 
 function asRecord(value: unknown) {

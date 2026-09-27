@@ -9,9 +9,10 @@ import { episodeHeadline } from "@/lib/title";
 import type { Session } from "@/lib/types";
 
 export function SessionDigest({ session }: { session: Session }) {
-  const { liveMessages, retryAnalysis, trash } = useStore();
+  const { liveMessages, retryAnalysis, loadExpression, trash } = useStore();
   const [rawOpen, setRawOpen] = useState(false);
   const [insightOpen, setInsightOpen] = useState(false);
+  const [expressionOpen, setExpressionOpen] = useState(false);
   const thread = liveMessages
     .filter((m) => m.sessionId === session.id && !m.pending && (m.text.trim() || m.image))
     .sort((a, b) => a.createdAt - b.createdAt);
@@ -121,12 +122,83 @@ export function SessionDigest({ session }: { session: Session }) {
         </div>
       ) : null}
 
-      <div className="mt-3 flex justify-end border-t border-line/70 pt-2">
-        <button type="button" onClick={() => trash(session.id)} className="text-[11px] tracking-wide text-ink-faint">
-          放到回收站
-        </button>
+      <div className="mt-3 border-t border-line/70 pt-2">
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              const next = !expressionOpen;
+              setExpressionOpen(next);
+              if (next && (session.expressionStatus !== "done" || !session.expression)) {
+                void loadExpression(session.id);
+              }
+            }}
+            className="flex items-center gap-1 text-[13px] tracking-wide text-accent"
+          >
+            {expressionOpen ? "收起一致性表达" : "一致性表达"}
+            <IconCaret className={`h-3.5 w-3.5 ${expressionOpen ? "rotate-180" : ""}`} />
+          </button>
+          <button type="button" onClick={() => trash(session.id)} className="text-[11px] tracking-wide text-ink-faint">
+            放到回收站
+          </button>
+        </div>
+        {expressionOpen ? (
+          <ExpressionPanel
+            session={session}
+            onRetry={() => void loadExpression(session.id, true)}
+          />
+        ) : null}
       </div>
     </article>
+  );
+}
+
+function ExpressionPanel({
+  session,
+  onRetry,
+}: {
+  session: Session;
+  onRetry: () => void;
+}) {
+  const expression = session.expression;
+  if (session.expressionStatus === "pending" || (!expression && session.expressionStatus !== "error")) {
+    return <p className="mt-3 text-[13px] tracking-wide text-ink-soft">正在按观察、感受、需要、请求拆开…</p>;
+  }
+  if (session.expressionStatus === "error" || !expression) {
+    return (
+      <div className="mt-3">
+        <p className="text-[13px] leading-6 text-ink-soft">{session.expressionError || "一致性表达没拆开"}</p>
+        <button type="button" className="mt-1 text-[13px] tracking-wide text-accent" onClick={onRetry}>
+          再试一次
+        </button>
+      </div>
+    );
+  }
+  const steps = [
+    { title: "观察", hint: "事实，不是评价", body: expression.observation },
+    { title: "感受", hint: "感受，不是想法", body: expression.feeling },
+    { title: "需要", hint: "需要，不是指责", body: expression.need },
+    { title: "请求", hint: "具体请求，不是命令", body: expression.request },
+  ];
+  return (
+    <div className="mt-3 space-y-3">
+      {steps.map((step) => (
+        <section key={step.title}>
+          <h3 className="text-[13px] font-medium tracking-wide text-ink">
+            {step.title}
+            <span className="ml-2 font-normal text-ink-faint">{step.hint}</span>
+          </h3>
+          <p className="mt-1 text-[14px] leading-7 break-words text-ink-soft [overflow-wrap:anywhere]">{step.body}</p>
+        </section>
+      ))}
+      <section className="border-t border-line/70 pt-3">
+        <h3 className="text-[13px] font-medium tracking-wide text-ink">可以这样跟对方说</h3>
+        <p className="mt-1 text-[14px] leading-7 break-words text-ink [overflow-wrap:anywhere]">{expression.expression}</p>
+      </section>
+      <button type="button" className="text-[12px] tracking-wide text-ink-faint" onClick={onRetry}>
+        重新生成
+      </button>
+    </div>
   );
 }
 

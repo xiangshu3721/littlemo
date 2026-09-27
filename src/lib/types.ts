@@ -34,6 +34,14 @@ export type Analysis = {
 
 export type AnalysisStatus = "idle" | "pending" | "done" | "error";
 
+export type ConsistencyExpression = {
+  observation: string;
+  feeling: string;
+  need: string;
+  request: string;
+  expression: string;
+};
+
 export type ChatRole = "user" | "assistant";
 
 export type EpisodeStatus = "active" | "pending" | "paused" | "completed" | "reopened";
@@ -68,6 +76,9 @@ export type Session = {
   analysis?: Analysis | null;
   analysisStatus: AnalysisStatus;
   analysisError?: string;
+  expression?: ConsistencyExpression | null;
+  expressionStatus?: AnalysisStatus;
+  expressionError?: string;
   deletedAt?: number;
   status?: EpisodeStatus;
   stage?: EmotionStage;
@@ -202,6 +213,7 @@ export type GuideTurn = {
     interaction: InteractionKind;
     options: string[];
     text: string;
+    texts: string[];
     reframe_now: boolean;
     safety_note?: string;
   };
@@ -241,6 +253,7 @@ export type GuideContext = {
   weather?: string;
   stress?: number | null;
   energy?: number | null;
+  justQuant?: "weather" | "stress" | "energy";
   known: {
     facts: string[];
     emotions: string[];

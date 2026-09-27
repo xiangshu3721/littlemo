@@ -1,6 +1,6 @@
 "use client";
 
-import { ACTIONS, BODY_FEELS, BODY_PARTS, WEATHERS } from "@/lib/guide";
+import { ACTIONS, BODY_FEELS, BODY_PARTS, SCORE_OPTIONS, WEATHERS } from "@/lib/guide";
 import { useStore } from "@/context/store";
 import type { Message } from "@/lib/types";
 
@@ -13,15 +13,16 @@ export function GuideChips({ message, isLatest }: { message: Message; isLatest: 
     interaction.kind === "weather"
       ? WEATHERS.map((w) => w.id)
       : interaction.kind === "stress" || interaction.kind === "energy"
-        ? interaction.options.length
-          ? interaction.options
-          : ["0", "2", "4", "6", "8", "10"]
+        ? SCORE_OPTIONS
         : interaction.kind === "body"
           ? [...BODY_PARTS, ...BODY_FEELS, ...interaction.options]
           : interaction.kind === "action"
             ? [...ACTIONS, ...interaction.options]
             : interaction.options;
-  const options = uniq([...base, interaction.kind === "weather" ? "自定义" : "其他"]);
+  const options = uniq([
+    ...base,
+    interaction.kind === "weather" ? "自定义" : interaction.kind === "stress" || interaction.kind === "energy" ? "" : "其他",
+  ]);
 
   const hint =
     interaction.kind === "weather"
@@ -29,9 +30,9 @@ export function GuideChips({ message, isLatest }: { message: Message; isLatest: 
       : interaction.kind === "emotions"
         ? "有哪些靠近现在的感觉"
         : interaction.kind === "stress"
-          ? "压力大概在哪"
-          : interaction.kind === "energy"
-            ? "如果是一块心理电池，还剩多少"
+          ? "压力 0 到 10，10 是快撑破"
+            : interaction.kind === "energy"
+              ? "能量 0 到 10，10 是满的"
             : interaction.kind === "body"
               ? "身体哪里有感觉"
               : interaction.kind === "needs"

@@ -55,16 +55,34 @@ export function ChatFeed({ messages = [] }: { messages: Message[] }) {
             <span className="h-px w-8 bg-line/80" />
           </h2>
           {items.map((message, index) => {
+            const prev = items[index - 1];
             const next = items[index + 1];
+            const burst = (a?: Message, b?: Message) =>
+              Boolean(
+                a &&
+                  b &&
+                  a.role === "assistant" &&
+                  b.role === "assistant" &&
+                  !a.pending &&
+                  !b.pending &&
+                  !a.error &&
+                  !b.error &&
+                  b.createdAt - a.createdAt >= 0 &&
+                  b.createdAt - a.createdAt < 4500,
+              );
             const archived =
               isArchiveMark(message.text) ||
               (endedById.get(message.sessionId) && (!next || next.sessionId !== message.sessionId));
             const isLatest = message.id === last?.id;
             return (
-              <div key={message.id} className="space-y-3">
+              <div key={message.id} className={`space-y-3 ${burst(prev, message) ? "!-mt-2" : ""}`}>
                 {isArchiveMark(message.text) && message.role === "assistant" ? null : (
                   <>
-                    <ChatBubble message={message} />
+                    <ChatBubble
+                      message={message}
+                      continued={burst(prev, message)}
+                      hideTime={burst(message, next)}
+                    />
                     <GuideChips message={message} isLatest={Boolean(isLatest)} />
                   </>
                 )}
